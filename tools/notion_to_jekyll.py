@@ -4,6 +4,8 @@ import json
 import requests
 import subprocess
 from datetime import datetime
+from io import BytesIO
+from PIL import Image
 from dotenv import load_dotenv
 from notion_client import Client
 
@@ -30,8 +32,14 @@ os.makedirs(POSTS_DIR, exist_ok=True)
 os.makedirs(IMG_DIR, exist_ok=True)
 
 def download_media(url, block_id, ext):
-    """Download media from Notion to the Jekyll assets folder."""
+    """Download media from Notion, optimize images to WebP, and save to assets folder."""
     filename = f"{block_id}.{ext}"
+    
+    # If the file is an image, we will force conversion to webp
+    is_image = ext.lower() in ['png', 'jpg', 'jpeg']
+    if is_image:
+        filename = f"{block_id}.webp"
+        
     filepath = os.path.join(IMG_DIR, filename)
     relative_path = f"/assets/img/posts/{filename}"
     
@@ -40,12 +48,31 @@ def download_media(url, block_id, ext):
         print(f"Downloading media: {filename}...")
         response = requests.get(url, stream=True)
         if response.status_code == 200:
-            with open(filepath, 'wb') as f:
-                for chunk in response.iter_content(1024):
-                    f.write(chunk)
+            if is_image:
+                # Open image from memory
+                img = Image.open(BytesIO(response.content))
+                # Convert RGBA to RGB (useful for PNG with alpha channel) if target is WebP
+                if img.mode in ("RGBA", "P"):
+                    img = img.convert("RGB")
+                
+                # Resize if width > 1920
+                max_width = 1920
+                if img.width > max_width:
+                    wpercent = (max_width / float(img.width))
+                    hsize = int((float(img.height) * float(wpercent)))
+                    img = img.resize((max_width, hsize), Image.Resampling.LANCZOS)
+                
+                # Save as optimized WebP
+                img.save(filepath, "WEBP", quality=85, optimize=True)
+            else:
+                # For gifs, videos, etc, just save directly
+                with open(filepath, 'wb') as f:
+                    for chunk in response.iter_content(1024):
+                        f.write(chunk)
+                        
             print(f"Saved to {relative_path}")
         else:
-            print(f"Failed to download image from {url}")
+            print(f"Failed to download media from {url}")
             return url # Return original url as fallback
             
     return relative_path

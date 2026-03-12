@@ -6,7 +6,7 @@ date: 2025-08-12T21:10:00.000Z
 
 
 
-![](/assets/img/posts/25acbb7d-7937-8025-8b1e-d1c993967ed3.png)
+![](/assets/img/posts/25acbb7d-7937-8025-8b1e-d1c993967ed3.webp)
 
 
 
@@ -510,33 +510,33 @@ class VisualLocalization:
 
 ## wild gs slam 결과물 분석
 
-![](/assets/img/posts/24dcbb7d-7937-8064-bc34-d98eac293ae5.png)
+![](/assets/img/posts/24dcbb7d-7937-8064-bc34-d98eac293ae5.webp)
 
-![](/assets/img/posts/24dcbb7d-7937-80a2-a872-d0f3c8bc564e.png)
+![](/assets/img/posts/24dcbb7d-7937-80a2-a872-d0f3c8bc564e.webp)
 
-![](/assets/img/posts/24dcbb7d-7937-808f-9791-d546f9aaf8d3.png)
+![](/assets/img/posts/24dcbb7d-7937-808f-9791-d546f9aaf8d3.webp)
 
 - **mono_prios**
 - **features** : 입력으로 들어온 순차적인 이미지들의 DINOv2 feature이다. (H, W, C) 형태를 띄고 있다.
-![](/assets/img/posts/24dcbb7d-7937-806b-b197-d843b01fdb16.png)
+![](/assets/img/posts/24dcbb7d-7937-806b-b197-d843b01fdb16.webp)
 
-![](/assets/img/posts/24dcbb7d-7937-8098-be44-ea367d903906.png)
+![](/assets/img/posts/24dcbb7d-7937-8098-be44-ea367d903906.webp)
 
-![](/assets/img/posts/24dcbb7d-7937-80ad-8a4e-cd9669627d8f.png)
+![](/assets/img/posts/24dcbb7d-7937-80ad-8a4e-cd9669627d8f.webp)
 
 - traj
 - **est_poses_full**.txt : 슬램 맵에 쓰인 이미지들의 카메라 포즈이다. 순서대로 (frame_id, tx, ty, tz, qx, qy, qz, qw) 의 형식을 띈다.
-![](/assets/img/posts/24dcbb7d-7937-8040-b9b8-c5045c5634cd.png)
+![](/assets/img/posts/24dcbb7d-7937-8040-b9b8-c5045c5634cd.webp)
 
 - plots_after_refine
 - output.gif : 모든 입력 이미지에 대해 estimated depth와 rendered_depth, uncertainty map등의 결과를 한눈에 보여준다.
 ![](/assets/img/posts/24dcbb7d-7937-8021-b7fb-f74492df9b28.gif)
 
 - uncertainty_mlp_weight.pth : 파이토치 가중치로써 DINOv2를 입력으로 넣었을때 움직이는 물체를 감지하는 mlp이다.
-![](/assets/img/posts/259cbb7d-7937-8087-a5a3-cc0ba6b5e07a.png)
+![](/assets/img/posts/259cbb7d-7937-8087-a5a3-cc0ba6b5e07a.webp)
 
 - final_gs.ply : global slam map으로써 3d gaussian map이므로 ply형식이다. 3d viewer로 보았을 때 아래와 같이 보인다. 아마도 est_poses_full.txt의 카메라 포즈와 스케일이 동일 할 것 같다.
-![](/assets/img/posts/24dcbb7d-7937-8035-9fff-cfba5cf52e66.png)
+![](/assets/img/posts/24dcbb7d-7937-8035-9fff-cfba5cf52e66.webp)
 
 
 
@@ -664,11 +664,11 @@ def predict_img_features(
 
 
 
-![](/assets/img/posts/259cbb7d-7937-80e2-8037-efbc532c2787.png)
+![](/assets/img/posts/259cbb7d-7937-80e2-8037-efbc532c2787.webp)
 
 
 
-![](/assets/img/posts/259cbb7d-7937-806f-8e2f-cc0310bde7d4.png)
+![](/assets/img/posts/259cbb7d-7937-806f-8e2f-cc0310bde7d4.webp)
 
 
 
@@ -841,7 +841,7 @@ def predict_img_features(
 
 
 
-![- ref image : 114, 101, 99, 104, 115 // P_{4\times4} difference between real map pose : ](/assets/img/posts/259cbb7d-7937-80f2-b254-d2105f2e25bf.png)
+![- ref image : 114, 101, 99, 104, 115 // P_{4\times4} difference between real map pose : ](/assets/img/posts/259cbb7d-7937-80f2-b254-d2105f2e25bf.webp)
 
 
 
@@ -859,11 +859,11 @@ def predict_img_features(
 
 1. map을 만드는데 사용된 이미지를 db에서 제거한 후 쿼리이미지로 사용하여 map 제작시의 카메라 포즈와 쿼리하여 찾은 카메라 포즈의 rotation과 transition 을 비교한다.
 1. ets_pose_full.txt와 query image의 P_{4\times4} 를 비교한다.
-![](/assets/img/posts/259cbb7d-7937-8012-a011-f30ecbeb851f.png)
+![](/assets/img/posts/259cbb7d-7937-8012-a011-f30ecbeb851f.webp)
 
-![](/assets/img/posts/259cbb7d-7937-80e5-ab93-f32b6f32817b.png)
+![](/assets/img/posts/259cbb7d-7937-80e5-ab93-f32b6f32817b.webp)
 
-![](/assets/img/posts/259cbb7d-7937-802f-a50c-d572c7e04065.png)
+![](/assets/img/posts/259cbb7d-7937-802f-a50c-d572c7e04065.webp)
 
 
 

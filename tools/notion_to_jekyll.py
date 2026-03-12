@@ -32,13 +32,16 @@ os.makedirs(POSTS_DIR, exist_ok=True)
 os.makedirs(IMG_DIR, exist_ok=True)
 
 def download_media(url, block_id, ext):
-    """Download media from Notion, optimize images to WebP, and save to assets folder."""
-    filename = f"{block_id}.{ext}"
-    
-    # If the file is an image, we will force conversion to webp
+    """Download media from Notion, optimize images to WebP, compress videos to GIF, and save to assets."""
     is_image = ext.lower() in ['png', 'jpg', 'jpeg']
+    is_video = ext.lower() in ['mp4', 'mov', 'webm']
+    
     if is_image:
         filename = f"{block_id}.webp"
+    elif is_video:
+        filename = f"{block_id}.gif"
+    else:
+        filename = f"{block_id}.{ext}"
         
     filepath = os.path.join(IMG_DIR, filename)
     relative_path = f"/assets/img/posts/{filename}"
@@ -64,8 +67,25 @@ def download_media(url, block_id, ext):
                 
                 # Save as optimized WebP
                 img.save(filepath, "WEBP", quality=85, optimize=True)
+            elif is_video:
+                # Save temp mp4
+                temp_video = os.path.join(IMG_DIR, f"temp_{block_id}.{ext}")
+                with open(temp_video, 'wb') as f:
+                    for chunk in response.iter_content(1024):
+                        f.write(chunk)
+                
+                # Convert to gif using ffmpeg
+                print(f"Converting video to GIF: {filename}...")
+                subprocess.run([
+                    "ffmpeg", "-y", "-i", temp_video,
+                    "-vf", "fps=10,scale=720:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse",
+                    "-loop", "0", filepath
+                ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                
+                if os.path.exists(temp_video):
+                    os.remove(temp_video)
             else:
-                # For gifs, videos, etc, just save directly
+                # For other files, just save directly
                 with open(filepath, 'wb') as f:
                     for chunk in response.iter_content(1024):
                         f.write(chunk)
@@ -85,14 +105,17 @@ def get_rich_text(rich_text_array):
         content = rt.get("plain_text", "")
         annotations = rt.get("annotations", {})
         
-        if annotations.get("bold"):
-            content = f"**{content}**"
-        if annotations.get("italic"):
-            content = f"*{content}*"
-        if annotations.get("strikethrough"):
-            content = f"~{content}~"
-        if annotations.get("code"):
-            content = f"`{content}`"
+        if rt.get("type") == "equation":
+            content = f"${content}$"
+        else:
+            if annotations.get("bold"):
+                content = f"**{content}**"
+            if annotations.get("italic"):
+                content = f"*{content}*"
+            if annotations.get("strikethrough"):
+                content = f"~{content}~"
+            if annotations.get("code"):
+                content = f"`{content}`"
             
         link = rt.get("href")
         if link:
@@ -127,7 +150,7 @@ def parse_block(block):
     elif block_type == "code":
         language = block["code"].get("language", "")
         code_text = get_rich_text(block["code"]["rich_text"])
-        md_text = f"```{language}\n{code_text}\n```\n\n"
+        md_text = f"<details>\n<summary>코드 보기 ({language})</summary>\n\n```{language}\n{code_text}\n```\n</details>\n\n"
         
     elif block_type == "image":
         image_obj = block["image"]
@@ -145,15 +168,16 @@ def parse_block(block):
         video_obj = block["video"]
         url = video_obj.get("file", {}).get("url") or video_obj.get("external", {}).get("url")
         if url:
-            # Provide simple html video tag for video embedding (can be expanded later with ffmpeg compression)
             caption = get_rich_text(video_obj.get("caption", []))
             ext = url.split("?")[0].split(".")[-1]
             if len(ext) > 4: ext = "mp4"
             local_path = download_media(url, block["id"], ext)
             
-            md_text = f'<video src="{local_path}" controls="controls" style="max-width: 100%;"></video>\n\n'
-            if caption:
-                md_text += f"*{caption}*\n\n"
+            md_text = f"![{caption}]({local_path})\n\n"
+                
+    elif block_type == "equation":
+        expr = block["equation"].get("expression", "")
+        md_text = f"$$\n{expr}\n$$\n\n"
                 
     elif block_type == "quote":
         md_text = f"> {get_rich_text(block['quote']['rich_text'])}\n\n"

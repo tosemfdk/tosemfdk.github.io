@@ -10,6 +10,9 @@ date: 2025-08-12T21:10:00.000Z
 
 
 
+<details>
+<summary>코드 보기 (python)</summary>
+
 ```python
 # run_vis.py
 import argparse
@@ -139,6 +142,10 @@ if __name__ == "__main__":
     main()
 
 ```
+</details>
+
+<details>
+<summary>코드 보기 (python)</summary>
 
 ```python
 #localization.py
@@ -505,6 +512,7 @@ class VisualLocalization:
             })
         return results
 ```
+</details>
 
 
 
@@ -553,6 +561,9 @@ class VisualLocalization:
 
 
 1. **query 이미지의 Dinov2 feature를 뽑아낸다.**
+<details>
+<summary>코드 보기 (python)</summary>
+
 ```python
 def predict_img_features(
     model: nn.Module,
@@ -610,10 +621,14 @@ def predict_img_features(
 
     return features
 ```
+</details>
 
 
 
 1. **query feature와 DB feature의 유사도를 계산하여 비슷한 이미지를 찾는다.**
+<details>
+<summary>코드 보기 (python)</summary>
+
 ```python
     def _mean_pool_and_norm(feat: torch.Tensor) -> np.ndarray:
     """feat: (H',W',C) or (N,C) -> (C,) L2-normalized float32 numpy"""
@@ -661,6 +676,7 @@ def predict_img_features(
             })
         return results
 ```
+</details>
 
 
 
@@ -675,6 +691,9 @@ def predict_img_features(
 
 
 1. **vggt forward pass 후 쿼리 이미지와 Top k 이미지들 간의 상대 camera pose를 찾는다.**
+<details>
+<summary>코드 보기 (python)</summary>
+
 ```python
     def localize_with_vggt(self,
                            query_path: str,
@@ -754,10 +773,14 @@ def predict_img_features(
             "per_ref": per_ref,
         }
 ```
+</details>
 
 
 
 1. **map 상의 ref image camera pose와 vggt로 만든 ref image의 pose의 scale, rotation을 구하여 query image의 map 상에서의 camera 포즈를 찾는다.**
+<details>
+<summary>코드 보기 (python)</summary>
+
 ```python
     def localize_with_vggt(self,
                            query_path: str,
@@ -838,10 +861,11 @@ def predict_img_features(
         }
 
 ```
+</details>
 
 
 
-![- ref image : 114, 101, 99, 104, 115 // P_{4\times4} difference between real map pose : ](/assets/img/posts/259cbb7d-7937-80f2-b254-d2105f2e25bf.webp)
+![- ref image : 114, 101, 99, 104, 115 // $P_{4\times4}$ difference between real map pose : ](/assets/img/posts/259cbb7d-7937-80f2-b254-d2105f2e25bf.webp)
 
 
 
@@ -858,7 +882,7 @@ def predict_img_features(
  2.  600 장으로 wildgs slam map작성
 
 1. map을 만드는데 사용된 이미지를 db에서 제거한 후 쿼리이미지로 사용하여 map 제작시의 카메라 포즈와 쿼리하여 찾은 카메라 포즈의 rotation과 transition 을 비교한다.
-1. ets_pose_full.txt와 query image의 P_{4\times4} 를 비교한다.
+1. ets_pose_full.txt와 query image의 $P_{4\times4}$ 를 비교한다.
 ![](/assets/img/posts/259cbb7d-7937-8012-a011-f30ecbeb851f.webp)
 
 ![](/assets/img/posts/259cbb7d-7937-80e5-ab93-f32b6f32817b.webp)

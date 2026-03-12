@@ -97,6 +97,15 @@ def download_media(url, block_id, ext):
             
     return relative_path
     
+def apply_annotation(content, char):
+    if not content:
+        return content
+    lspaces = len(content) - len(content.lstrip())
+    rspaces = len(content) - len(content.rstrip())
+    core = content.strip()
+    if not core:
+        return content
+    return (" " * lspaces) + f"{char}{core}{char}" + (" " * rspaces)
 
 def get_rich_text(rich_text_array):
     """Convert Notion rich text objects to Markdown."""
@@ -106,16 +115,16 @@ def get_rich_text(rich_text_array):
         annotations = rt.get("annotations", {})
         
         if rt.get("type") == "equation":
-            content = f"${content}$"
+            content = apply_annotation(content, "$")
         else:
             if annotations.get("bold"):
-                content = f"**{content}**"
+                content = apply_annotation(content, "**")
             if annotations.get("italic"):
-                content = f"*{content}*"
+                content = apply_annotation(content, "*")
             if annotations.get("strikethrough"):
-                content = f"~{content}~"
+                content = apply_annotation(content, "~")
             if annotations.get("code"):
-                content = f"`{content}`"
+                content = apply_annotation(content, "`")
             
         link = rt.get("href")
         if link:
@@ -266,7 +275,8 @@ def process_notion_page():
         "---",
         f"layout: post",
         f"title: \"{title}\"",
-        f"date: {matter_date_str}"
+        f"date: {matter_date_str}",
+        "math: true"
     ]
     
     if category:

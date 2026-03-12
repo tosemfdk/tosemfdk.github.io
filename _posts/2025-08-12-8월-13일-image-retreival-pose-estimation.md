@@ -2,6 +2,7 @@
 layout: post
 title: "8월 13일 - image retreival & pose estimation"
 date: 2025-08-12T21:10:00.000Z
+math: true
 ---
 
 
@@ -554,7 +555,7 @@ class VisualLocalization:
 
 ### Step1. image retrieval
 
-> 로봇이 pose를 잃었을때에 현재 이미지를 query image라고 한다면 그 쿼리 이미지와 **비슷한 top K개의 이미지를 map 제작에 사용했던 이미지 db에서 찾아낸다.** 이후 쿼리 이미지와 Top K개의 이미지를 **vggt forward pass에 넣고 상대 카메라 위치를 찾아낸다**. 이를** 이미지 db안의 map기준 카메라 pose와 align**시켜 쿼리이미지의 map상에서의 카메라 포즈를 찾을 수 있다.
+> 로봇이 pose를 잃었을때에 현재 이미지를 query image라고 한다면 그 쿼리 이미지와 **비슷한 top K개의 이미지를 map 제작에 사용했던 이미지 db에서 찾아낸다.** 이후 쿼리 이미지와 Top K개의 이미지를 **vggt forward pass에 넣고 상대 카메라 위치를 찾아낸다**. 이를 **이미지 db안의 map기준 카메라 pose와 align**시켜 쿼리이미지의 map상에서의 카메라 포즈를 찾을 수 있다.
 
 
 

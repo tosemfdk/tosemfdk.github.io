@@ -11,8 +11,8 @@ math: true
 
 
 
-<details>
-<summary>코드 보기 (python)</summary>
+<details markdown="1">
+<summary>run_vis.py, visual_localization.py</summary>
 
 ```python
 # run_vis.py
@@ -143,10 +143,6 @@ if __name__ == "__main__":
     main()
 
 ```
-</details>
-
-<details>
-<summary>코드 보기 (python)</summary>
 
 ```python
 #localization.py
@@ -513,6 +509,9 @@ class VisualLocalization:
             })
         return results
 ```
+
+
+
 </details>
 
 
@@ -526,347 +525,23 @@ class VisualLocalization:
 ![](/assets/img/posts/24dcbb7d-7937-808f-9791-d546f9aaf8d3.webp)
 
 - **mono_prios**
-- **features** : 입력으로 들어온 순차적인 이미지들의 DINOv2 feature이다. (H, W, C) 형태를 띄고 있다.
-![](/assets/img/posts/24dcbb7d-7937-806b-b197-d843b01fdb16.webp)
-
+  - **features** : 입력으로 들어온 순차적인 이미지들의 DINOv2 feature이다. (H, W, C) 형태를 띄고 있다.
+    ![](/assets/img/posts/24dcbb7d-7937-806b-b197-d843b01fdb16.webp)
 ![](/assets/img/posts/24dcbb7d-7937-8098-be44-ea367d903906.webp)
 
 ![](/assets/img/posts/24dcbb7d-7937-80ad-8a4e-cd9669627d8f.webp)
 
 - traj
-- **est_poses_full**.txt : 슬램 맵에 쓰인 이미지들의 카메라 포즈이다. 순서대로 (frame_id, tx, ty, tz, qx, qy, qz, qw) 의 형식을 띈다.
-![](/assets/img/posts/24dcbb7d-7937-8040-b9b8-c5045c5634cd.webp)
-
+  - **est_poses_full**.txt : 슬램 맵에 쓰인 이미지들의 카메라 포즈이다. 순서대로 (frame_id, tx, ty, tz, qx, qy, qz, qw) 의 형식을 띈다.
+    ![](/assets/img/posts/24dcbb7d-7937-8040-b9b8-c5045c5634cd.webp)
 - plots_after_refine
-- output.gif : 모든 입력 이미지에 대해 estimated depth와 rendered_depth, uncertainty map등의 결과를 한눈에 보여준다.
-![](/assets/img/posts/24dcbb7d-7937-8021-b7fb-f74492df9b28.gif)
-
+  - output.gif : 모든 입력 이미지에 대해 estimated depth와 rendered_depth, uncertainty map등의 결과를 한눈에 보여준다.
+  ![](/assets/img/posts/24dcbb7d-7937-8021-b7fb-f74492df9b28.gif)
 - uncertainty_mlp_weight.pth : 파이토치 가중치로써 DINOv2를 입력으로 넣었을때 움직이는 물체를 감지하는 mlp이다.
-![](/assets/img/posts/259cbb7d-7937-8087-a5a3-cc0ba6b5e07a.webp)
-
+  ![](/assets/img/posts/259cbb7d-7937-8087-a5a3-cc0ba6b5e07a.webp)
 - final_gs.ply : global slam map으로써 3d gaussian map이므로 ply형식이다. 3d viewer로 보았을 때 아래와 같이 보인다. 아마도 est_poses_full.txt의 카메라 포즈와 스케일이 동일 할 것 같다.
-![](/assets/img/posts/24dcbb7d-7937-8035-9fff-cfba5cf52e66.webp)
+  ![](/assets/img/posts/24dcbb7d-7937-8035-9fff-cfba5cf52e66.webp)
 
-
-
-
-
-## 실행과정
-
-### Step1. image retrieval
-
-> 로봇이 pose를 잃었을때에 현재 이미지를 query image라고 한다면 그 쿼리 이미지와 **비슷한 top K개의 이미지를 map 제작에 사용했던 이미지 db에서 찾아낸다.** 이후 쿼리 이미지와 Top K개의 이미지를 **vggt forward pass에 넣고 상대 카메라 위치를 찾아낸다**. 이를 **이미지 db안의 map기준 카메라 pose와 align**시켜 쿼리이미지의 map상에서의 카메라 포즈를 찾을 수 있다.
-
-
-
-
-
-1. **query 이미지의 Dinov2 feature를 뽑아낸다.**
-<details>
-<summary>코드 보기 (python)</summary>
-
-```python
-def predict_img_features(
-    model: nn.Module,
-    idx: int,
-    input_tensor: torch.Tensor,
-    cfg: Dict,
-    device: str,
-    save_feat: bool = True,
-    suffix: str = "",
-) -> torch.Tensor:
-    """
-    Predict image features using the given model.
-
-    Args:
-        model (nn.Module): The feature extractor model.
-        idx (int): Image index.
-        input_tensor (torch.Tensor): Input image tensor of shape (1, 3, H, W).
-        cfg (Dict): Configuration dictionary.
-        device (str): Device to run the model on.
-        save_feat (bool): Whether to save the features.
-        suffix (str): Suffix for the output file name.
-
-    Returns:
-        torch.Tensor: Extracted features.
-    """
-    extractor_model = cfg["mono_prior"]["feature_extractor"]
-    stride = 14
-    mean = [0.485, 0.456, 0.406]
-    std = [0.229, 0.224, 0.225]
-
-    normalize = transforms.Normalize(mean=mean, std=std)
-    image_resized = process_image(input_tensor, stride, normalize, device)
-
-    if extractor_model in ["dinov2_reg_small_fine", "dinov2_small_fine"]:
-        features = model.get_intermediate_layers(
-            image_resized,
-            n=[8, 9, 10, 11],
-            reshape=True,
-            return_prefix_tokens=False,
-            return_class_token=False,
-            norm=True,
-        )
-        features = features[-1].squeeze().permute((1, 2, 0))
-    elif extractor_model in ["dinov2_vits14", "dinov2_vits14_reg"]:
-        features_dict = model.forward_features(image_resized)
-        features = features_dict["x_norm_patchtokens"].view(
-            image_resized.shape[2] // 14, image_resized.shape[3] // 14, -1
-        )
-    else:
-        # If use other feature extractor as prior, add code here
-        raise NotImplementedError("Unsupported feature extractor")
-
-    if save_feat:
-        _save_features(features, cfg, idx, suffix)
-
-    return features
-```
-</details>
-
-
-
-1. **query feature와 DB feature의 유사도를 계산하여 비슷한 이미지를 찾는다.**
-<details>
-<summary>코드 보기 (python)</summary>
-
-```python
-    def _mean_pool_and_norm(feat: torch.Tensor) -> np.ndarray:
-    """feat: (H',W',C) or (N,C) -> (C,) L2-normalized float32 numpy"""
-    if feat.ndim == 3:
-        feat = feat.reshape(-1, feat.shape[-1])
-    vec = feat.mean(dim=0) # convert (N,C) shape into (C,)
-    vec = vec / (vec.norm() + 1e-12) # divide vec with L2 norm -> vec become unit vector
-    return vec.cpu().float().numpy()
-    
-    def retreival(self, image: torch.Tensor, tstamp: int, topk: int = 5):
-        """
-        image: (1,3,H,W) torch.Tensor (SLAM 파이프라인과 동일 스케일/정규화 전 입력)
-        """
-        # 1) 쿼리 DINO feature 추출 (저장은 불필요)
-        q_feat = predict_img_features(
-            model=self.feat_extractor,
-            idx=tstamp,
-            input_tensor=image,
-            cfg=self.cfg,
-            device=self.device,
-            save_feat=False,
-        )  # (H',W',C)
-        q_vec = _mean_pool_and_norm(q_feat)  # (C,) float32
-
-        # 2) DB 준비
-        if self._db_vecs is None:
-            self._build_db()
-
-        # 3) 검색
-        if _HAS_FAISS and self._index is not None:
-            D, I = self._index.search(q_vec[None,:], topk)   # 내적값 클수록 유사
-            sims = D[0]; inds = I[0]
-        else:
-            sims = (self._db_vecs @ q_vec).astype("float32")
-            inds = np.argsort(-sims)[:topk]
-
-        # 4) 결과 반환
-        results = []
-        for rank, i in enumerate(inds):
-            results.append({
-                "rank": rank+1,
-                "frame_id": int(self._db_ids[i]),
-                "feature_path": str(self._db_paths[i]),
-                "similarity": float(sims[rank] if _HAS_FAISS and self._index is not None else sims[i]),
-            })
-        return results
-```
-</details>
-
-
-
-![](/assets/img/posts/259cbb7d-7937-80e2-8037-efbc532c2787.webp)
-
-
-
-![](/assets/img/posts/259cbb7d-7937-806f-8e2f-cc0310bde7d4.webp)
-
-
-
-
-
-1. **vggt forward pass 후 쿼리 이미지와 Top k 이미지들 간의 상대 camera pose를 찾는다.**
-<details>
-<summary>코드 보기 (python)</summary>
-
-```python
-    def localize_with_vggt(self,
-                           query_path: str,
-                           retrieval_results: List[Dict],
-                           est_pose_txt: str,
-                           images_dir: str,
-                           use_topk: int = 2) -> Dict:
-        """
-        VGGT로 (쿼리 + ref들) 포즈를 추정하고, SLAM 월드로 끌어올려 쿼리의 월드포즈를 추정.
-        반환: dict( T_WC_q, scale, used_refs, per_ref )
-        """
-        assert len(retrieval_results) >= 1, "retrieval 결과가 비었습니다."
-
-        # 0) 레퍼런스 이미지 경로 수집
-        refs = retrieval_results[:use_topk]
-        ref_ids  = []
-        ref_imgs = []
-        for r in refs:
-            fid = int(r["frame_id"])
-            path = _find_image_by_id(images_dir, fid)
-            if path is None:
-                print(f"[WARN] ref frame_id={fid} 의 RGB를 찾지 못했습니다. 스킵.")
-                continue
-            ref_ids.append(fid)
-            ref_imgs.append(path)
-
-        if not ref_imgs:
-            raise FileNotFoundError("레퍼런스 RGB를 하나도 찾지 못함.")
-
-        # 1) SLAM 월드포즈 로드 (camera→world)
-        id2T_WC = _read_est_poses_full(est_pose_txt)
-        T_WC_refs = []
-        for fid in ref_ids:
-            if fid not in id2T_WC:
-                raise KeyError(f"est_pose_full.txt에 frame_id={fid} 가 없습니다.")
-            T_WC_refs.append(id2T_WC[fid])
-
-        # 2) VGGT 로드 & extrinsic 추정 (world→camera)
-        device = self.device if torch.cuda.is_available() else "cpu"
-        model  = _load_vggt(device=device)
-
-        # ref + query
-        all_paths = ref_imgs + [query_path]
-        E = _run_vggt_extrinsics(model, all_paths, device=device)  # (N,3,4)
-        # 분리
-        E_refs = [E[i] for i in range(len(ref_imgs))]
-        E_q    = E[len(ref_imgs)]
-
-        # 3) 스케일 추정 (ref가 2장 이상일 때 권장)
-        s = _estimate_scale_from_refs(E_refs, T_WC_refs)
-
-        # 4) 각 ref마다 쿼리 월드포즈 후보 계산
-        T_WC_q_candidates = []
-        per_ref = []
-        for i, (E_r, T_WC_r, fid) in enumerate(zip(E_refs, T_WC_refs, ref_ids)):
-            T_r_to_q = _rel_cam_to_cam(_worldcam_extrinsic_to_4x4(E_r),
-                                       _worldcam_extrinsic_to_4x4(E_q))
-            T_r_to_q_scaled = _scale_translation(T_r_to_q, s)
-            T_WC_q = T_WC_r @ np.linalg.inv(T_r_to_q_scaled)
-            T_WC_q_candidates.append(T_WC_q)
-
-            per_ref.append({
-                "ref_frame_id": fid,
-                "T_r_to_q": T_r_to_q,
-                "T_r_to_q_scaled": T_r_to_q_scaled,
-                "T_WC_r": T_WC_r,
-                "T_WC_q_candidate": T_WC_q
-            })
-
-        # 5) 후보 결합(간단 버전: 번역 중간값)
-        T_WC_q_final = _avg_pose_candidates(T_WC_q_candidates)
-
-        return {
-            "T_WC_q": T_WC_q_final,     # 4x4 (camera→world)
-            "scale": s,
-            "used_refs": ref_ids,
-            "per_ref": per_ref,
-        }
-```
-</details>
-
-
-
-1. **map 상의 ref image camera pose와 vggt로 만든 ref image의 pose의 scale, rotation을 구하여 query image의 map 상에서의 camera 포즈를 찾는다.**
-<details>
-<summary>코드 보기 (python)</summary>
-
-```python
-    def localize_with_vggt(self,
-                           query_path: str,
-                           retrieval_results: List[Dict],
-                           est_pose_txt: str,
-                           images_dir: str,
-                           use_topk: int = 2) -> Dict:
-        """
-        VGGT로 (쿼리 + ref들) 포즈를 추정하고, SLAM 월드로 끌어올려 쿼리의 월드포즈를 추정.
-        반환: dict( T_WC_q, scale, used_refs, per_ref )
-        """
-        assert len(retrieval_results) >= 1, "retrieval 결과가 비었습니다."
-
-        # 0) 레퍼런스 이미지 경로 수집
-        refs = retrieval_results[:use_topk]
-        ref_ids  = []
-        ref_imgs = []
-        for r in refs:
-            fid = int(r["frame_id"])
-            path = _find_image_by_id(images_dir, fid)
-            if path is None:
-                print(f"[WARN] ref frame_id={fid} 의 RGB를 찾지 못했습니다. 스킵.")
-                continue
-            ref_ids.append(fid)
-            ref_imgs.append(path)
-
-        if not ref_imgs:
-            raise FileNotFoundError("레퍼런스 RGB를 하나도 찾지 못함.")
-
-        # 1) SLAM 월드포즈 로드 (camera→world)
-        id2T_WC = _read_est_poses_full(est_pose_txt)
-        T_WC_refs = []
-        for fid in ref_ids:
-            if fid not in id2T_WC:
-                raise KeyError(f"est_pose_full.txt에 frame_id={fid} 가 없습니다.")
-            T_WC_refs.append(id2T_WC[fid])
-
-        # 2) VGGT 로드 & extrinsic 추정 (world→camera)
-        device = self.device if torch.cuda.is_available() else "cpu"
-        model  = _load_vggt(device=device)
-
-        # ref + query
-        all_paths = ref_imgs + [query_path]
-        E = _run_vggt_extrinsics(model, all_paths, device=device)  # (N,3,4)
-        # 분리
-        E_refs = [E[i] for i in range(len(ref_imgs))]
-        E_q    = E[len(ref_imgs)]
-
-        # 3) 스케일 추정 (ref가 2장 이상일 때 권장)
-        s = _estimate_scale_from_refs(E_refs, T_WC_refs)
-
-        # 4) 각 ref마다 쿼리 월드포즈 후보 계산
-        T_WC_q_candidates = []
-        per_ref = []
-        for i, (E_r, T_WC_r, fid) in enumerate(zip(E_refs, T_WC_refs, ref_ids)):
-            T_r_to_q = _rel_cam_to_cam(_worldcam_extrinsic_to_4x4(E_r),
-                                       _worldcam_extrinsic_to_4x4(E_q))
-            T_r_to_q_scaled = _scale_translation(T_r_to_q, s)
-            T_WC_q = T_WC_r @ np.linalg.inv(T_r_to_q_scaled)
-            T_WC_q_candidates.append(T_WC_q)
-
-            per_ref.append({
-                "ref_frame_id": fid,
-                "T_r_to_q": T_r_to_q,
-                "T_r_to_q_scaled": T_r_to_q_scaled,
-                "T_WC_r": T_WC_r,
-                "T_WC_q_candidate": T_WC_q
-            })
-
-        # 5) 후보 결합(간단 버전: 번역 중간값)
-        T_WC_q_final = _avg_pose_candidates(T_WC_q_candidates)
-
-        return {
-            "T_WC_q": T_WC_q_final,     # 4x4 (camera→world)
-            "scale": s,
-            "used_refs": ref_ids,
-            "per_ref": per_ref,
-        }
-
-```
-</details>
-
-
-
-![- ref image : 114, 101, 99, 104, 115 // $P_{4\times4}$ difference between real map pose : ](/assets/img/posts/259cbb7d-7937-80f2-b254-d2105f2e25bf.webp)
 
 
 
@@ -879,18 +554,16 @@ def predict_img_features(
 ## 실험설정
 
 1. map을 제작되는데 사용되는 약 600장의 이미지와 나머지 쿼리 후보군 이미지 800장으로 데이터 셋 분류
-1. 1000장 이상으로 넘어갈 시 4070 ti super 그래픽카드의 16gb ram 초과 현상 발생
+   1. 1000장 이상으로 넘어갈 시 4070 ti super 그래픽카드의 16gb ram 초과 현상 발생
  2.  600 장으로 wildgs slam map작성
 
 1. map을 만드는데 사용된 이미지를 db에서 제거한 후 쿼리이미지로 사용하여 map 제작시의 카메라 포즈와 쿼리하여 찾은 카메라 포즈의 rotation과 transition 을 비교한다.
-1. ets_pose_full.txt와 query image의 $P_{4\times4}$ 를 비교한다.
-![](/assets/img/posts/259cbb7d-7937-8012-a011-f30ecbeb851f.webp)
-
-![](/assets/img/posts/259cbb7d-7937-80e5-ab93-f32b6f32817b.webp)
-
-![](/assets/img/posts/259cbb7d-7937-802f-a50c-d572c7e04065.webp)
-
-
+   1. ets_pose_full.txt와 query image의 $P_{4\times4}$ 를 비교한다.
+   ![](/assets/img/posts/259cbb7d-7937-8012-a011-f30ecbeb851f.webp)
+   
+   ![](/assets/img/posts/259cbb7d-7937-80e5-ab93-f32b6f32817b.webp)
+   
+   ![](/assets/img/posts/259cbb7d-7937-802f-a50c-d572c7e04065.webp)
 
 
 
@@ -898,9 +571,6 @@ def predict_img_features(
 
 
 
-
-
-하이
 
 
 

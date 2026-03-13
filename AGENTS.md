@@ -10,3 +10,8 @@ A skill is a set of local instructions stored in a `SKILL.md` file. Use the loca
 - Scope: Keep the skill focused on this repo's Notion -> Jekyll workflow. Do not use it for generic Notion tasks outside this blog.
 - Progressive disclosure: Read `SKILL.md` first. Load the referenced `references/` file only if exact mapping details are needed.
 - Safety: Preserve unrelated user edits in `_posts` and other files. Never overwrite an existing post unless the user explicitly asks for replacement.
+
+### Repository workflow rules
+- If content/config/code was changed in this repository, automatically run `git add -A`, `git commit`, and `git push` at the end of the task unless the user explicitly says not to.
+- Use a concise commit message that reflects the actual change.
+- Never commit real secrets from `.env`; keep only placeholder values in `.env.example`.

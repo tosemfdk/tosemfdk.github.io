@@ -11,6 +11,8 @@ Use this skill to sync Notion content into this repository's blog without re-der
 
 - Read [`tools/notion_to_jekyll.py`](../../../tools/notion_to_jekyll.py) before making assumptions.
 - Read `.env` for `NOTION_TOKEN`, `NOTION_PAGE_ID` or `NOTION_DATABASE_ID`, and optional `NOTION_HOME_ID`.
+- Keep `.env.example` tracked in Git and update it whenever required env keys change; commit placeholders only, never real secrets.
+- After making content changes for this workflow, automatically `git add -A`, `git commit`, and `git push` unless the user explicitly opts out.
 - Prefer refreshing posts by running the script rather than hand-writing Markdown from scratch.
 - Preserve unrelated working tree changes in `_posts/` and other files.
 

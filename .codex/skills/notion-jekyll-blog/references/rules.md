@@ -11,6 +11,7 @@
 - `NOTION_PAGE_ID`: Preferred target input.
 - `NOTION_DATABASE_ID`: Fallback if `NOTION_PAGE_ID` is absent.
 - `NOTION_HOME_ID`: Optional; keep for legacy fallback logic.
+- `.env.example`: Must stay committed in Git and mirror the supported env key names with placeholder values only.
 
 ## Page ID normalization
 
@@ -69,6 +70,9 @@
 - Prefer running the script over hand-writing a post.
 - Hand-edit only for cleanup the script cannot express yet.
 - Preserve unrelated working tree changes.
+- Keep `.env.example` in the repo and update it whenever `.env` keys for this workflow change.
+- Never commit real secrets from `.env`; only commit placeholder values in `.env.example`.
+- After content changes, automatically run `git add -A`, `git commit`, and `git push` unless the user explicitly says not to.
 - If Python dependencies are missing, use a temp virtualenv instead of changing system Python.
 - If Jekyll build fails because Bundler is missing, report it as an environment issue.
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Notion Jekyll Blog"
+  short_description: "Convert Notion pages into this Jekyll blog"
+  default_prompt: "Use $notion-jekyll-blog to convert a Notion page into this repository's Jekyll blog format."

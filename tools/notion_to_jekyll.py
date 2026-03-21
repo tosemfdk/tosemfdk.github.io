@@ -53,6 +53,7 @@ POSTS_DIR = os.path.join(os.getcwd(), "_posts")
 IMG_DIR = os.path.join(os.getcwd(), "assets", "img", "posts")
 os.makedirs(POSTS_DIR, exist_ok=True)
 os.makedirs(IMG_DIR, exist_ok=True)
+MAX_GIF_BYTES = int(float(os.getenv("NOTION_MAX_GIF_MB", "95")) * 1024 * 1024)
 
 SEARCH_CACHE = None
 
@@ -247,6 +248,70 @@ def resolve_category(page, properties):
 def yaml_scalar(value):
     return json.dumps(value, ensure_ascii=False)
 
+
+def convert_video_to_gif_with_limit(input_path, output_path, max_bytes):
+    profiles = [
+        (10, 720, 256),
+        (8, 640, 192),
+        (6, 540, 128),
+        (5, 480, 96),
+        (4, 420, 64),
+        (3, 360, 48),
+        (2, 320, 32),
+    ]
+
+    for fps, width, colors in profiles:
+        filter_chain = (
+            f"fps={fps},scale={width}:-1:flags=lanczos,split[s0][s1];"
+            f"[s0]palettegen=max_colors={colors}[p];"
+            f"[s1][p]paletteuse"
+        )
+        result = subprocess.run(
+            [
+                "ffmpeg",
+                "-y",
+                "-i",
+                input_path,
+                "-vf",
+                filter_chain,
+                "-loop",
+                "0",
+                output_path,
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        if result.returncode == 0 and os.path.exists(output_path) and os.path.getsize(output_path) <= max_bytes:
+            return True
+
+    return False
+
+
+def convert_video_to_mp4(input_path, output_path):
+    result = subprocess.run(
+        [
+            "ffmpeg",
+            "-y",
+            "-i",
+            input_path,
+            "-vf",
+            "scale='min(960,iw)':-2:flags=lanczos",
+            "-c:v",
+            "libx264",
+            "-preset",
+            "veryfast",
+            "-crf",
+            "28",
+            "-movflags",
+            "+faststart",
+            "-an",
+            output_path,
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    return result.returncode == 0 and os.path.exists(output_path)
+
 def download_media(url, block_id, ext):
     """Download media from Notion, optimize images to WebP, compress videos to GIF, and save to assets."""
     is_image = ext.lower() in ['png', 'jpg', 'jpeg']
@@ -261,9 +326,21 @@ def download_media(url, block_id, ext):
         
     filepath = os.path.join(IMG_DIR, filename)
     relative_path = f"/assets/img/posts/{filename}"
-    
-    # Download if not already exists
-    if not os.path.exists(filepath):
+
+    oversize_video = (
+        is_video
+        and os.path.exists(filepath)
+        and filepath.endswith(".gif")
+        and os.path.getsize(filepath) > MAX_GIF_BYTES
+    )
+
+    # Download if not already exists, or re-encode if existing GIF is oversized.
+    if not os.path.exists(filepath) or oversize_video:
+        if oversize_video:
+            print(
+                f"Existing GIF is too large ({os.path.getsize(filepath) / (1024 * 1024):.2f}MB), "
+                f"re-encoding {filename}..."
+            )
         print(f"Downloading media: {filename}...")
         response = requests.get(url, stream=True)
         if response.status_code == 200:
@@ -290,13 +367,25 @@ def download_media(url, block_id, ext):
                     for chunk in response.iter_content(1024):
                         f.write(chunk)
                 
-                # Convert to gif using ffmpeg
+                # Convert to gif using ffmpeg with progressive downscaling.
                 print(f"Converting video to GIF: {filename}...")
-                subprocess.run([
-                    "ffmpeg", "-y", "-i", temp_video,
-                    "-vf", "fps=10,scale=720:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse",
-                    "-loop", "0", filepath
-                ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                gif_ok = convert_video_to_gif_with_limit(temp_video, filepath, MAX_GIF_BYTES)
+                if not gif_ok:
+                    mp4_filename = f"{block_id}.mp4"
+                    mp4_filepath = os.path.join(IMG_DIR, mp4_filename)
+                    print(
+                        f"GIF exceeds {MAX_GIF_BYTES // (1024 * 1024)}MB; "
+                        f"falling back to MP4: {mp4_filename}..."
+                    )
+                    if os.path.exists(filepath):
+                        os.remove(filepath)
+                    if convert_video_to_mp4(temp_video, mp4_filepath):
+                        filename = mp4_filename
+                        filepath = mp4_filepath
+                        relative_path = f"/assets/img/posts/{mp4_filename}"
+                    else:
+                        print("Failed to convert video to MP4 fallback.")
+                        return url
                 
                 if os.path.exists(temp_video):
                     os.remove(temp_video)
@@ -422,8 +511,15 @@ def parse_block(block, children_md=""):
             ext = url.split("?")[0].split(".")[-1]
             if len(ext) > 4: ext = "mp4"
             local_path = download_media(url, block["id"], ext)
-            
-            md_text = f"![{caption}]({local_path})\n\n"
+
+            if local_path.endswith(".mp4"):
+                safe_caption = caption.replace('"', "&quot;")
+                md_text = (
+                    f"<video controls playsinline preload=\"metadata\" "
+                    f'src="{local_path}" title="{safe_caption}"></video>\n\n'
+                )
+            else:
+                md_text = f"![{caption}]({local_path})\n\n"
                 
     elif block_type == "equation":
         expr = block["equation"].get("expression", "")

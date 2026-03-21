@@ -15,3 +15,6 @@ A skill is a set of local instructions stored in a `SKILL.md` file. Use the loca
 - If content/config/code was changed in this repository, automatically run `git add -A`, `git commit`, and `git push` at the end of the task unless the user explicitly says not to.
 - Use a concise commit message that reflects the actual change.
 - Never commit real secrets from `.env`; keep only placeholder values in `.env.example`.
+- For Notion sync tasks, run `uv sync` first and execute the converter with `uv run python tools/notion_to_jekyll.py`.
+- For Notion video blocks, if generated GIF is too large for GitHub push limits, reduce it with `ffmpeg` automatically; if still too large, store a compressed `.mp4` fallback instead of committing oversized GIFs.
+- Never commit Python cache artifacts such as `tools/__pycache__/` or `*.pyc`.

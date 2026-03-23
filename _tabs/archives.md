@@ -15,7 +15,7 @@ order: 3
       {% for post in year.items %}
         <li class="mb-2">
           <span class="text-muted">{{ post.date | date: "%m-%d" }}</span>
-          <a href="{{ post.url | relative_url }}" class="ms-2">{{ post.title }}</a>
+          <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
         </li>
       {% endfor %}
     </ul>

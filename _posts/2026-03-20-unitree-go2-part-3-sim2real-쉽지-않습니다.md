@@ -4,7 +4,7 @@ title: "[Unitree Go2 part 3] Sim2Real 쉽지 않습니다."
 date: 2026-03-20T12:03:00.000Z
 math: true
 image:
-  path: "/assets/img/posts/32acbb7d-7937-8095-8563-fd5600868e80.gif"
+  path: "/assets/img/posts/32acbb7d-7937-80c8-abcc-f2453c1ca817.gif"
 categories:
   - "Unitree Go2"
 ---

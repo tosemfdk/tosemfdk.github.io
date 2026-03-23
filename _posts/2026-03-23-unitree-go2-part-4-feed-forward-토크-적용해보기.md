@@ -4,7 +4,7 @@ title: "[Unitree Go2 part 4] feed forward 토크 적용해보기"
 date: 2026-03-23T10:14:00.000Z
 math: true
 image:
-  path: "/assets/img/posts/32ccbb7d-7937-806e-b45a-c57277e4fd76.gif"
+  path: "/assets/img/posts/32ccbb7d-7937-8055-bcb2-d4b130bc0615.gif"
 categories:
   - "Unitree Go2"
 ---

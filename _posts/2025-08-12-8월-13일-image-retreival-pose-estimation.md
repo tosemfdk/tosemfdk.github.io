@@ -3,6 +3,8 @@ layout: post
 title: "8월 13일 - image retreival & pose estimation"
 date: 2025-08-12T21:10:00.000Z
 math: true
+image:
+  path: "/assets/img/posts/25acbb7d-7937-8025-8b1e-d1c993967ed3.webp"
 ---
 
 
@@ -564,7 +566,6 @@ class VisualLocalization:
    ![](/assets/img/posts/259cbb7d-7937-80e5-ab93-f32b6f32817b.webp)
    
    ![](/assets/img/posts/259cbb7d-7937-802f-a50c-d572c7e04065.webp)
-
 
 
 

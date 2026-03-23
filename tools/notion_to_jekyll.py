@@ -54,6 +54,7 @@ IMG_DIR = os.path.join(os.getcwd(), "assets", "img", "posts")
 os.makedirs(POSTS_DIR, exist_ok=True)
 os.makedirs(IMG_DIR, exist_ok=True)
 MAX_GIF_BYTES = int(float(os.getenv("NOTION_MAX_GIF_MB", "95")) * 1024 * 1024)
+FEATURE_IMAGE_MAX_BYTES = int(float(os.getenv("NOTION_FEATURE_IMAGE_MAX_MB", "12")) * 1024 * 1024)
 
 SEARCH_CACHE = None
 
@@ -562,6 +563,30 @@ def get_page_blocks(block_id):
         
     return "".join(blocks)
 
+def local_media_size(relative_path):
+    if not relative_path.startswith("/"):
+        return None
+
+    local_path = os.path.join(os.getcwd(), relative_path.lstrip("/"))
+    if os.path.exists(local_path):
+        return os.path.getsize(local_path)
+    return None
+
+def select_feature_image(markdown_body):
+    image_paths = re.findall(r"!\[[^\]]*\]\((/assets/img/posts/[^)\s]+)\)", markdown_body)
+
+    gif_candidates = [path for path in image_paths if path.lower().endswith(".gif")]
+    for path in gif_candidates:
+        size = local_media_size(path)
+        if size is None or size <= FEATURE_IMAGE_MAX_BYTES:
+            return path
+
+    for path in image_paths:
+        if re.search(r"\.(?:webp|png|jpe?g|gif)$", path, re.IGNORECASE):
+            return path
+
+    return None
+
 def process_notion_page():
     """Fetch a single page and convert it to a Jekyll post."""
     print("Fetching Notion page...")
@@ -595,6 +620,7 @@ def process_notion_page():
 
     # Fetch body text
     body_markdown = get_page_blocks(resolved_page_id)
+    featured_image = select_feature_image(body_markdown)
 
     # Construct Front Matter
     front_matter = [
@@ -605,6 +631,9 @@ def process_notion_page():
         "math: true"
     ]
 
+    if featured_image:
+        front_matter.append("image:")
+        front_matter.append(f"  path: {yaml_scalar(featured_image)}")
     if category:
         front_matter.append("categories:")
         front_matter.append(f"  - {yaml_scalar(category)}")

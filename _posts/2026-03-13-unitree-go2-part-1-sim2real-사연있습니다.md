@@ -3,6 +3,8 @@ layout: post
 title: "[Unitree Go2 part 1] Sim2Real 사연있습니다.."
 date: 2026-03-13T10:40:00.000Z
 math: true
+image:
+  path: "/assets/img/posts/322cbb7d-7937-80f8-85bf-d0023259d89d.gif"
 archive: false
 categories:
   - "Unitree Go2"

@@ -3,6 +3,8 @@ layout: post
 title: "[Unitree Go2 part 1] Sim2Real에 처음 도전하다."
 date: 2026-03-12T05:28:00.000Z
 math: true
+image:
+  path: "/assets/img/posts/321cbb7d-7937-80b5-bdf0-f4eb03b0e2ff.gif"
 categories:
   - "Unitree Go2"
 ---
@@ -622,7 +624,6 @@ if __name__ == "__main__":
   1. depoly시에 observation으로 주는 값이 train과 같지 않다.
   1. imu 정보를 읽어오는 부분에서 좌표계가 꼬였다.
   1. 보상중에 발을 땅에서 떼도록 하는 feet_air_time과 feet_slide의 가중치가 잘못 되었다.
-
 
 
 

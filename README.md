@@ -29,6 +29,31 @@ latest version of the **Chirpy** theme and the [CD][CD] workflow to here, so tha
 
 Check out the [theme's docs](https://github.com/cotes2020/jekyll-theme-chirpy/wiki).
 
+## Notion import
+
+This repo includes `tools/notion_to_jekyll.py` for importing Notion content into `_posts/`.
+
+- Default mode: `NOTION_IMPORT_MODE=single`
+- Direct-child batch mode: `NOTION_IMPORT_MODE=direct_children`
+
+Example direct-child import:
+
+```shell
+NOTION_IMPORT_MODE=direct_children \
+NOTION_IMPORT_ROOT_PAGE_ID=24dcbb7d79378091bb83df2ae86685f4 \
+NOTION_IMPORT_CATEGORY_OVERRIDE='서울대학교 여름방학 인턴' \
+NOTION_DIRECT_CHILD_MAX_GIF_MB=25 \
+uv run python tools/notion_to_jekyll.py
+```
+
+Direct-child mode:
+
+- imports only direct child pages under the root page
+- skips database children
+- skips existing posts
+- writes `notion_source_id` front matter for dedupe
+- keeps video output as GIF only
+
 ## Contributing
 
 This repository is automatically updated with new releases from the theme repository. If you encounter any issues or want to contribute to its improvement, please visit the [theme repository][chirpy] to provide feedback.

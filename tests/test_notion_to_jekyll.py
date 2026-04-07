@@ -168,6 +168,24 @@ class NotionToJekyllTests(unittest.TestCase):
             self.assertIn("## Section", rendered)
             self.assertIn("nested image", rendered)
 
+    def test_parse_callout_keeps_child_content(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            config = self.make_config(tempdir)
+            block = {
+                "type": "callout",
+                "callout": {"rich_text": [{"plain_text": "Callout"}]},
+            }
+            rendered = notion.parse_block(config, block, "child image\n")
+            self.assertIn("> Callout", rendered)
+            self.assertIn("child image", rendered)
+
+    def test_parse_column_list_keeps_child_content(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            config = self.make_config(tempdir)
+            block = {"type": "column_list"}
+            rendered = notion.parse_block(config, block, "column body\n")
+            self.assertIn("column body", rendered)
+
     def test_prune_generated_assets_removes_unreferenced_files(self):
         with tempfile.TemporaryDirectory() as tempdir:
             config = self.make_config(tempdir)

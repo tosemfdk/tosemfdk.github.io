@@ -5,7 +5,7 @@ date: 2025-09-01T04:07:00.000Z
 math: true
 notion_source_id: "261cbb7d-7937-8044-8652-cf70f31a68ec"
 image:
-  path: "/assets/img/posts/261cbb7d-7937-80ee-98fd-ff41d258a326.webp"
+  path: "/assets/img/posts/261cbb7d-7937-8023-922c-cf77a3939381.webp"
 categories:
   - "서울대학교 여름방학 인턴"
 ---
@@ -26,10 +26,34 @@ categories:
 
 - 이미지 기반으로 찾을때에는 비슷한 이미지의 반대쪽 복도 이미지를 retrieval 하는 문제점이 있었다.
 - geometrical 기반으로 할때에는 동일한 복도에서의 이미지를 retrieval하는 모습을 띈다.
+![](/assets/img/posts/261cbb7d-7937-8023-922c-cf77a3939381.webp)
+
+
+
+![](/assets/img/posts/261cbb7d-7937-80c4-ae2f-eb870b3f8302.webp)
+
+
+
 
 
 - 사람과 같은 동적 물체를 좀 더 엄밀하게 걸러낼 수 있다. 
+![](/assets/img/posts/261cbb7d-7937-801b-b7e1-e847305d6d80.webp)
+
+
+
+![](/assets/img/posts/261cbb7d-7937-8020-b874-cf98775963b2.webp)
+
+
+
 - 아직 threshold, inlier rate 등의 파라미터 최적화가 되지 않아서 오히려 이상한 이미지의 priority가 상승하는 경우도 있음
+![](/assets/img/posts/261cbb7d-7937-8080-95ee-f22ffe050ba4.webp)
+
+
+
+![](/assets/img/posts/261cbb7d-7937-807d-b277-c18785593ef9.webp)
+
+
+
 
 
 - 움직이는 물체까지 feature를 잡아버리기 때문에 똑같은 동적물체가 있는 이미지라면 retrieval된다.

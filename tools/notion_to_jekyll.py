@@ -579,6 +579,12 @@ def parse_block(config: NotionConfig, block, children_md=""):
     elif block_type == "toggle":
         summary_text = get_rich_text(block["toggle"]["rich_text"])
         md_text = f"<details markdown=\"1\">\n<summary>{summary_text}</summary>\n\n{children_md}\n\n</details>\n\n"
+    elif block_type == "callout":
+        summary_text = get_rich_text(block["callout"]["rich_text"]).strip()
+        if summary_text:
+            md_text = f"> {summary_text}\n\n{children_md}"
+        else:
+            md_text = children_md
     elif block_type == "code":
         language = block["code"].get("language", "")
         code_text = get_rich_text(block["code"]["rich_text"])
@@ -587,6 +593,8 @@ def parse_block(config: NotionConfig, block, children_md=""):
         md_text = f"## {block['child_page']['title']}\n\n{children_md}"
     elif block_type == "child_database":
         md_text = f"### {block['child_database']['title']}\n\n{children_md}"
+    elif block_type in {"column_list", "column"}:
+        md_text = children_md
     elif block_type == "table_of_contents":
         md_text = ""
     elif block_type == "bookmark":

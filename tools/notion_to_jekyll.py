@@ -38,6 +38,7 @@ class NotionConfig:
     max_gif_bytes: int
     feature_image_max_bytes: int
     search_cache: list[dict[str, Any]] | None = field(default=None)
+    generated_assets: set[str] = field(default_factory=set)
 
     @property
     def headers(self) -> dict[str, str]:
@@ -433,14 +434,50 @@ def optimize_image(response_content: bytes, filepath: str):
     img.save(filepath, "WEBP", quality=85, optimize=True)
 
 
+def write_stream_to_file(response, filepath: str):
+    with open(filepath, "wb") as file_handle:
+        for chunk in response.iter_content(1024):
+            file_handle.write(chunk)
+
+
+def ensure_gif_with_limit(config: NotionConfig, response, block_id: str, source_ext: str) -> str:
+    filename = f"{block_id}.gif"
+    filepath = os.path.join(config.img_dir, filename)
+    relative_path = f"/assets/img/posts/{filename}"
+    temp_input = os.path.join(config.img_dir, f"temp_{block_id}.{source_ext}")
+    write_stream_to_file(response, temp_input)
+
+    if os.path.getsize(temp_input) <= config.max_gif_bytes:
+        os.replace(temp_input, filepath)
+        config.generated_assets.add(relative_path)
+        print(f"Saved to {relative_path}")
+        return relative_path
+
+    print(f"Re-encoding GIF to satisfy {config.max_gif_bytes // (1024 * 1024)}MB limit: {filename}...")
+    gif_ok = convert_video_to_gif_with_limit(temp_input, filepath, config.max_gif_bytes)
+    if os.path.exists(temp_input):
+        os.remove(temp_input)
+    if not gif_ok:
+        if os.path.exists(filepath):
+            os.remove(filepath)
+        raise RuntimeError(
+            f"Unable to convert GIF block {block_id} into a file under "
+            f"{config.max_gif_bytes // (1024 * 1024)}MB."
+        )
+    config.generated_assets.add(relative_path)
+    print(f"Saved to {relative_path}")
+    return relative_path
+
+
 def download_media(config: NotionConfig, url, block_id, ext):
     """Download media from Notion, optimize images to WebP, compress videos to GIF, and save to assets."""
     is_image = ext.lower() in ["png", "jpg", "jpeg"]
     is_video = ext.lower() in ["mp4", "mov", "webm"]
+    is_gif = ext.lower() == "gif"
 
     if is_image:
         filename = f"{block_id}.webp"
-    elif is_video:
+    elif is_video or is_gif:
         filename = f"{block_id}.gif"
     else:
         filename = f"{block_id}.{ext}"
@@ -449,7 +486,7 @@ def download_media(config: NotionConfig, url, block_id, ext):
     relative_path = f"/assets/img/posts/{filename}"
 
     oversize_video = (
-        is_video
+        (is_video or is_gif)
         and os.path.exists(filepath)
         and filepath.endswith(".gif")
         and os.path.getsize(filepath) > config.max_gif_bytes
@@ -464,36 +501,21 @@ def download_media(config: NotionConfig, url, block_id, ext):
         response = requests.get(url, stream=True)
         if response.status_code != 200:
             print(f"Failed to download media from {url}")
-            if is_video:
-                raise RuntimeError(f"Failed to download video for GIF conversion: {url}")
+            if is_video or is_gif:
+                raise RuntimeError(f"Failed to download GIF-constrained media for conversion: {url}")
             return url
 
         if is_image:
             optimize_image(response.content, filepath)
-        elif is_video:
-            temp_video = os.path.join(config.img_dir, f"temp_{block_id}.{ext}")
-            with open(temp_video, "wb") as file_handle:
-                for chunk in response.iter_content(1024):
-                    file_handle.write(chunk)
-
-            print(f"Converting video to GIF: {filename}...")
-            gif_ok = convert_video_to_gif_with_limit(temp_video, filepath, config.max_gif_bytes)
-            if os.path.exists(temp_video):
-                os.remove(temp_video)
-            if not gif_ok:
-                if os.path.exists(filepath):
-                    os.remove(filepath)
-                raise RuntimeError(
-                    f"Unable to convert video block {block_id} into a GIF under "
-                    f"{config.max_gif_bytes // (1024 * 1024)}MB."
-                )
+        elif is_video or is_gif:
+            print(f"Converting media to GIF: {filename}...")
+            return ensure_gif_with_limit(config, response, block_id, ext)
         else:
-            with open(filepath, "wb") as file_handle:
-                for chunk in response.iter_content(1024):
-                    file_handle.write(chunk)
+            write_stream_to_file(response, filepath)
 
         print(f"Saved to {relative_path}")
 
+    config.generated_assets.add(relative_path)
     return relative_path
 
 
@@ -541,11 +563,11 @@ def parse_block(config: NotionConfig, block, children_md=""):
     if block_type == "paragraph":
         md_text = get_rich_text(block["paragraph"]["rich_text"]) + "\n\n" + children_md
     elif block_type == "heading_1":
-        md_text = f"# {get_rich_text(block['heading_1']['rich_text'])}\n\n"
+        md_text = f"# {get_rich_text(block['heading_1']['rich_text'])}\n\n{children_md}"
     elif block_type == "heading_2":
-        md_text = f"## {get_rich_text(block['heading_2']['rich_text'])}\n\n"
+        md_text = f"## {get_rich_text(block['heading_2']['rich_text'])}\n\n{children_md}"
     elif block_type == "heading_3":
-        md_text = f"### {get_rich_text(block['heading_3']['rich_text'])}\n\n"
+        md_text = f"### {get_rich_text(block['heading_3']['rich_text'])}\n\n{children_md}"
     elif block_type == "bulleted_list_item":
         md_text = f"- {get_rich_text(block['bulleted_list_item']['rich_text'])}\n"
         if children_md:
@@ -562,9 +584,9 @@ def parse_block(config: NotionConfig, block, children_md=""):
         code_text = get_rich_text(block["code"]["rich_text"])
         md_text = f"```{language}\n{code_text}\n```\n\n"
     elif block_type == "child_page":
-        md_text = f"## {block['child_page']['title']}\n\n"
+        md_text = f"## {block['child_page']['title']}\n\n{children_md}"
     elif block_type == "child_database":
-        md_text = f"### {block['child_database']['title']}\n\n"
+        md_text = f"### {block['child_database']['title']}\n\n{children_md}"
     elif block_type == "table_of_contents":
         md_text = ""
     elif block_type == "bookmark":
@@ -697,6 +719,11 @@ def build_post_filename(title: str, created_time: str) -> str:
     return f"{post_date}-{slugify_title(title)}.md"
 
 
+def extract_asset_references(markdown_text: str) -> set[str]:
+    refs = set(re.findall(r"/assets/img/posts/([^\)\s]+)", markdown_text))
+    return {ref.rstrip('"').rstrip("'") for ref in refs}
+
+
 def build_front_matter(
     *,
     title: str,
@@ -804,6 +831,22 @@ def write_post(filepath: str, content: str):
         file_handle.write(content)
 
 
+def prune_generated_assets(config: NotionConfig, created_filepaths: list[str]):
+    referenced_assets = set()
+    for filepath in created_filepaths:
+        with open(filepath, "r", encoding="utf-8") as file_handle:
+            referenced_assets.update(extract_asset_references(file_handle.read()))
+
+    for relative_path in sorted(config.generated_assets):
+        basename = os.path.basename(relative_path)
+        if basename in referenced_assets:
+            continue
+        local_path = os.path.join(config.img_dir, basename)
+        if os.path.exists(local_path):
+            os.remove(local_path)
+            print(f"Removed unreferenced generated asset: {relative_path}")
+
+
 def write_post_if_missing(posts_dir: str, filename: str, content: str, notion_source_id: str | None = None):
     should_skip, filepath, reason = should_skip_existing_post(posts_dir, filename, notion_source_id)
     if should_skip:
@@ -839,6 +882,7 @@ def process_direct_children_import(config: NotionConfig):
     discovered_count = len(child_pages)
     skipped_count = 0
     created_count = 0
+    created_filepaths: list[str] = []
 
     for child in child_pages:
         page, resolved_page_id = resolve_page(config, child["id"])
@@ -879,9 +923,11 @@ def process_direct_children_import(config: NotionConfig):
         )
         if created:
             created_count += 1
+            created_filepaths.append(os.path.join(config.posts_dir, post["filename"]))
         else:
             skipped_count += 1
 
+    prune_generated_assets(config, created_filepaths)
     print(f"Summary: discovered={discovered_count} skipped={skipped_count} created={created_count}")
 
 

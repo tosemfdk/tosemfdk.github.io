@@ -146,6 +146,50 @@ class NotionToJekyllTests(unittest.TestCase):
             self.assertIn("![demo](/assets/img/posts/vid1.gif)", rendered)
             self.assertNotIn("<video", rendered)
 
+    def test_parse_block_child_page_keeps_child_content(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            config = self.make_config(tempdir)
+            block = {
+                "type": "child_page",
+                "child_page": {"title": "Nested"},
+            }
+            rendered = notion.parse_block(config, block, "inner body\n")
+            self.assertIn("## Nested", rendered)
+            self.assertIn("inner body", rendered)
+
+    def test_parse_heading_keeps_child_content(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            config = self.make_config(tempdir)
+            block = {
+                "type": "heading_2",
+                "heading_2": {"rich_text": [{"plain_text": "Section"}]},
+            }
+            rendered = notion.parse_block(config, block, "nested image\n")
+            self.assertIn("## Section", rendered)
+            self.assertIn("nested image", rendered)
+
+    def test_prune_generated_assets_removes_unreferenced_files(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            config = self.make_config(tempdir)
+            referenced = Path(config.img_dir) / "keep.webp"
+            orphan = Path(config.img_dir) / "drop.webp"
+            referenced.write_bytes(b"keep")
+            orphan.write_bytes(b"drop")
+            post_path = Path(config.posts_dir) / "2026-01-01-test.md"
+            post_path.write_text("![](/assets/img/posts/keep.webp)\n", encoding="utf-8")
+            config.generated_assets.update(
+                {"/assets/img/posts/keep.webp", "/assets/img/posts/drop.webp"}
+            )
+            notion.prune_generated_assets(config, [str(post_path)])
+            self.assertTrue(referenced.exists())
+            self.assertFalse(orphan.exists())
+
+    def test_extract_asset_references_strips_front_matter_quotes(self):
+        refs = notion.extract_asset_references(
+            'image:\n  path: "/assets/img/posts/example.webp"\n![](/assets/img/posts/other.webp)\n'
+        )
+        self.assertEqual(refs, {"example.webp", "other.webp"})
+
     def test_parse_block_video_raises_when_no_gif_is_produced(self):
         with tempfile.TemporaryDirectory() as tempdir:
             config = self.make_config(tempdir)
@@ -170,14 +214,37 @@ class NotionToJekyllTests(unittest.TestCase):
 
     def test_download_media_raises_when_video_cannot_be_converted(self):
         with tempfile.TemporaryDirectory() as tempdir:
-            config = self.make_config(tempdir, NOTION_IMPORT_MODE="direct_children")
+            config = self.make_config(
+                tempdir,
+                NOTION_IMPORT_MODE="direct_children",
+                NOTION_DIRECT_CHILD_MAX_GIF_MB="1",
+            )
+            large_video = b"x" * (2 * 1024 * 1024)
             with mock.patch.object(
                 notion.requests,
                 "get",
-                return_value=self.FakeResponse(status_code=200, content=b"video", chunks=[b"video"]),
+                return_value=self.FakeResponse(status_code=200, content=large_video, chunks=[large_video]),
             ), mock.patch.object(notion, "convert_video_to_gif_with_limit", return_value=False):
                 with self.assertRaises(RuntimeError):
                     notion.download_media(config, "https://example.com/video.mp4", "vid4", "mp4")
+
+    def test_download_media_reencodes_gif_when_it_exceeds_limit(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            config = self.make_config(
+                tempdir,
+                NOTION_IMPORT_MODE="direct_children",
+                NOTION_DIRECT_CHILD_MAX_GIF_MB="1",
+            )
+            large_gif = b"x" * (2 * 1024 * 1024)
+            with mock.patch.object(
+                notion.requests,
+                "get",
+                return_value=self.FakeResponse(status_code=200, content=large_gif, chunks=[large_gif]),
+            ), mock.patch.object(notion, "convert_video_to_gif_with_limit", return_value=True) as convert_mock:
+                path = notion.download_media(config, "https://example.com/anim.gif", "gif1", "gif")
+            self.assertEqual(path, "/assets/img/posts/gif1.gif")
+            convert_mock.assert_called_once()
+            self.assertIn("/assets/img/posts/gif1.gif", config.generated_assets)
 
 
 if __name__ == "__main__":

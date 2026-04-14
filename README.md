@@ -35,6 +35,15 @@ This repo includes `tools/notion_to_jekyll.py` for importing Notion content into
 
 - Default mode: `NOTION_IMPORT_MODE=single`
 - Direct-child batch mode: `NOTION_IMPORT_MODE=direct_children`
+- Optional category override for either mode: `NOTION_IMPORT_CATEGORY_OVERRIDE=...`
+
+Example single-page import with a forced category:
+
+```shell
+NOTION_PAGE_ID=342cbb7d793780f7af67f18a6256482e \
+NOTION_IMPORT_CATEGORY_OVERRIDE='UNIST' \
+uv run python tools/notion_to_jekyll.py
+```
 
 Example direct-child import:
 

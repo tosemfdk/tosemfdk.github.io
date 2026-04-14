@@ -876,7 +876,12 @@ def process_single_page(config: NotionConfig):
         print(f"Error fetching page: could not resolve {config.page_id}")
         return
 
-    post = render_page_to_post(config, page, resolved_page_id)
+    post = render_page_to_post(
+        config,
+        page,
+        resolved_page_id,
+        category_override=config.import_category_override,
+    )
     filepath = os.path.join(config.posts_dir, post["filename"])
     write_post(filepath, post["content"])
     print(f"Created/Updated: {filepath}\n")

@@ -41,6 +41,37 @@ class NotionToJekyllTests(unittest.TestCase):
             self.assertEqual(config.import_category_override, "서울대학교 여름방학 인턴")
             self.assertEqual(config.max_gif_bytes, 25 * 1024 * 1024)
 
+    def test_process_single_page_uses_category_override(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            config = self.make_config(
+                tempdir,
+                NOTION_IMPORT_CATEGORY_OVERRIDE="UNIST",
+            )
+            page = {
+                "created_time": "2026-04-14T07:47:00.000Z",
+                "properties": {
+                    "Title": {
+                        "type": "title",
+                        "title": [{"plain_text": "[Unist 복원 프로젝트] Part 1. 어떻게 진행할까?"}],
+                    }
+                },
+            }
+
+            with mock.patch.object(
+                notion,
+                "resolve_page",
+                return_value=(page, "342cbb7d-7937-80f7-af67-f18a6256482e"),
+            ), mock.patch.object(
+                notion,
+                "get_page_blocks",
+                return_value="Body\n",
+            ):
+                notion.process_single_page(config)
+
+            post_path = Path(config.posts_dir) / "2026-04-14-unist-복원-프로젝트-part-1-어떻게-진행할까.md"
+            content = post_path.read_text(encoding="utf-8")
+            self.assertIn('  - "UNIST"', content)
+
     def test_discover_direct_child_pages_filters_non_child_pages(self):
         with tempfile.TemporaryDirectory() as tempdir:
             config = self.make_config(tempdir)

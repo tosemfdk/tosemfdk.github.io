@@ -434,6 +434,14 @@ def optimize_image(response_content: bytes, filepath: str):
     img.save(filepath, "WEBP", quality=85, optimize=True)
 
 
+def is_actual_gif(filepath: str) -> bool:
+    try:
+        with Image.open(filepath) as img:
+            return img.format == "GIF"
+    except (OSError, ValueError):
+        return False
+
+
 def write_stream_to_file(response, filepath: str):
     with open(filepath, "wb") as file_handle:
         for chunk in response.iter_content(1024):
@@ -447,7 +455,8 @@ def ensure_gif_with_limit(config: NotionConfig, response, block_id: str, source_
     temp_input = os.path.join(config.img_dir, f"temp_{block_id}.{source_ext}")
     write_stream_to_file(response, temp_input)
 
-    if os.path.getsize(temp_input) <= config.max_gif_bytes:
+    source_is_real_gif = source_ext.lower() == "gif" and is_actual_gif(temp_input)
+    if source_is_real_gif and os.path.getsize(temp_input) <= config.max_gif_bytes:
         os.replace(temp_input, filepath)
         config.generated_assets.add(relative_path)
         print(f"Saved to {relative_path}")
@@ -491,12 +500,20 @@ def download_media(config: NotionConfig, url, block_id, ext):
         and filepath.endswith(".gif")
         and os.path.getsize(filepath) > config.max_gif_bytes
     )
+    invalid_gif = (
+        (is_video or is_gif)
+        and os.path.exists(filepath)
+        and filepath.endswith(".gif")
+        and not is_actual_gif(filepath)
+    )
 
-    if not os.path.exists(filepath) or oversize_video:
+    if not os.path.exists(filepath) or oversize_video or invalid_gif:
         if oversize_video:
             print(
                 f"Existing GIF is too large ({os.path.getsize(filepath) / (1024 * 1024):.2f}MB), re-encoding {filename}..."
             )
+        if invalid_gif:
+            print(f"Existing GIF asset is not a real GIF, regenerating {filename}...")
         print(f"Downloading media: {filename}...")
         response = requests.get(url, stream=True)
         if response.status_code != 200:

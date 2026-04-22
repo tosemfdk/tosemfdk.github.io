@@ -317,6 +317,20 @@ class NotionToJekyllTests(unittest.TestCase):
             convert_mock.assert_called_once()
             self.assertIn("/assets/img/posts/gif1.gif", config.generated_assets)
 
+    def test_download_media_reencodes_fake_gif_even_when_under_limit(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            config = self.make_config(tempdir)
+            fake_gif = b"not-a-real-gif"
+            with mock.patch.object(
+                notion.requests,
+                "get",
+                return_value=self.FakeResponse(status_code=200, content=fake_gif, chunks=[fake_gif]),
+            ), mock.patch.object(notion, "convert_video_to_gif_with_limit", return_value=True) as convert_mock:
+                path = notion.download_media(config, "https://example.com/anim.gif", "gif2", "gif")
+            self.assertEqual(path, "/assets/img/posts/gif2.gif")
+            convert_mock.assert_called_once()
+            self.assertIn("/assets/img/posts/gif2.gif", config.generated_assets)
+
 
 if __name__ == "__main__":
     unittest.main()

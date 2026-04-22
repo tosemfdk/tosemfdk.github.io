@@ -4,7 +4,7 @@ title: "[Unist 복원 프로젝트] Part 2. slam을 사용해보자"
 date: 2026-04-22T02:27:00.000Z
 math: true
 image:
-  path: "/assets/img/posts/34acbb7d-7937-80ff-81ef-c3463e2c478a.gif"
+  path: "/assets/img/posts/34acbb7d-7937-806b-a201-f15d85ad0d51.gif"
 categories:
   - "UNIST"
 ---

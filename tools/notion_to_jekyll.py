@@ -665,6 +665,8 @@ def get_page_blocks(config: NotionConfig, block_id):
         if block.get("has_children"):
             children_md = get_page_blocks(config, block["id"])
         md = parse_block(config, block, children_md)
+        if blocks and md.startswith("```") and not blocks[-1].endswith("\n\n"):
+            blocks[-1] += "\n"
         blocks.append(md)
     return "".join(blocks)
 

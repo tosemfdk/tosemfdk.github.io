@@ -217,6 +217,28 @@ class NotionToJekyllTests(unittest.TestCase):
             rendered = notion.parse_block(config, block, "column body\n")
             self.assertIn("column body", rendered)
 
+    def test_get_page_blocks_inserts_blank_line_before_fenced_code_after_list(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            config = self.make_config(tempdir)
+            blocks = [
+                {
+                    "type": "bulleted_list_item",
+                    "bulleted_list_item": {"rich_text": [{"plain_text": "list item"}]},
+                    "has_children": False,
+                },
+                {
+                    "type": "code",
+                    "code": {
+                        "language": "xml",
+                        "rich_text": [{"plain_text": "<tag />"}],
+                    },
+                    "has_children": False,
+                },
+            ]
+            with mock.patch.object(notion, "list_block_children", return_value=blocks):
+                rendered = notion.get_page_blocks(config, "page-id")
+            self.assertIn("- list item\n\n```xml\n<tag />\n```", rendered)
+
     def test_prune_generated_assets_removes_unreferenced_files(self):
         with tempfile.TemporaryDirectory() as tempdir:
             config = self.make_config(tempdir)

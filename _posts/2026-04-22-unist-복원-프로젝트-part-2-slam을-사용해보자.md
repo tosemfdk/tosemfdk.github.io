@@ -74,6 +74,9 @@ kitty dataset 같은 장거리 데이터셋에서 높은 성능을 보였다는�
 
 FVDB를 활용하기 위해서 odometry가 정확하게 나오는 모바일 로봇이 필요한데.. 내가 가지고 있는 당장 사용할 수 있는 로봇이 unitree go2밖에는 없다. 따라서 unitree go2의 센서데이터를 가지고 fvdb를 한번 사용해보기로 했다. 
 
+<details markdown="1">
+<summary>go2’s topic list</summary>
+
 ```bash
 ros2 topic list
 
@@ -205,6 +208,10 @@ ros2 topic list
 /xfk_webrtcres
 ```
 
+
+
+</details>
+
 - 사실 위에는 기본적으로 나오지 않는 ros topic까지도 섞여있다. 나중에 제대로 된 토픽 list를 올리도록 하겠다. 내가 수집한 토픽은 아래와 같다.
   - /utlidar/robot_odom : unitree go2의 내장 lidar, imu, 다리 움직임을 통합하여 계산한 오도메트리이다. 아마 로봇 본체의 흔들림을 최소화 하였을 것 같다.
   - /frontvideostream : unitree ros2 msg 형태로 비디오 스트림이 인코딩되어서 들어온다. 720p, 360p, 180p의 영상이 stream으로 들어온다. (Annex-B 형태의 H.264 인코딩 비디오 payload)
@@ -218,6 +225,7 @@ ros2 topic list
 ![](/assets/img/posts/34acbb7d-7937-8081-8224-f83ee4127f9f.webp)
 
 - 먼저 데이터셋에서 lidar와 카메라의 extrinsic을 한번 맞추어보았다. 보이는대로 조금씩 틀어져있는것을 확인할 수 있다.. 만약 제대로 fvdb를 활용하려면 아마 cailbration을 다시 맞추어야 할 것 같다.
+
 ```xml
 ## camera urdf
 <joint name="front_camera_joint" type="fixed">

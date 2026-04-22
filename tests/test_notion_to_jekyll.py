@@ -204,11 +204,32 @@ class NotionToJekyllTests(unittest.TestCase):
             config = self.make_config(tempdir)
             block = {
                 "type": "callout",
-                "callout": {"rich_text": [{"plain_text": "Callout"}]},
+                "callout": {
+                    "rich_text": [{"plain_text": "Callout"}],
+                    "icon": {"type": "emoji", "emoji": "💡"},
+                    "color": "blue_background",
+                },
             }
             rendered = notion.parse_block(config, block, "child image\n")
-            self.assertIn("> Callout", rendered)
+            self.assertIn('class="notion-callout"', rendered)
+            self.assertIn("💡", rendered)
+            self.assertIn("Callout", rendered)
             self.assertIn("child image", rendered)
+            self.assertIn("rgba(37, 99, 235, 0.12)", rendered)
+
+    def test_parse_callout_falls_back_to_default_icon(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            config = self.make_config(tempdir)
+            block = {
+                "type": "callout",
+                "callout": {
+                    "rich_text": [{"plain_text": "No emoji icon"}],
+                    "icon": {"type": "file", "file": {"url": "https://example.com/icon.png"}},
+                },
+            }
+            rendered = notion.parse_block(config, block)
+            self.assertIn("💡", rendered)
+            self.assertIn("No emoji icon", rendered)
 
     def test_parse_column_list_keeps_child_content(self):
         with tempfile.TemporaryDirectory() as tempdir:

@@ -23,6 +23,18 @@ QUALITY_PROFILES = [
     (2, 320, 32),
 ]
 TRIM_RATIOS = [0.75, 0.5, 0.35, 0.25, 0.15]
+CALLOUT_COLOR_STYLES = {
+    "default": ("rgba(127, 127, 127, 0.12)", "rgba(127, 127, 127, 0.28)"),
+    "gray": ("rgba(127, 127, 127, 0.12)", "rgba(127, 127, 127, 0.28)"),
+    "brown": ("rgba(150, 99, 72, 0.12)", "rgba(150, 99, 72, 0.28)"),
+    "orange": ("rgba(217, 119, 6, 0.12)", "rgba(217, 119, 6, 0.28)"),
+    "yellow": ("rgba(202, 138, 4, 0.12)", "rgba(202, 138, 4, 0.28)"),
+    "green": ("rgba(22, 163, 74, 0.12)", "rgba(22, 163, 74, 0.28)"),
+    "blue": ("rgba(37, 99, 235, 0.12)", "rgba(37, 99, 235, 0.28)"),
+    "purple": ("rgba(147, 51, 234, 0.12)", "rgba(147, 51, 234, 0.28)"),
+    "pink": ("rgba(219, 39, 119, 0.12)", "rgba(219, 39, 119, 0.28)"),
+    "red": ("rgba(220, 38, 38, 0.12)", "rgba(220, 38, 38, 0.28)"),
+}
 
 
 @dataclass
@@ -573,6 +585,48 @@ def get_rich_text(rich_text_array):
     return text
 
 
+def get_callout_icon(callout: dict[str, Any]) -> str:
+    icon = callout.get("icon") or {}
+    if icon.get("type") == "emoji":
+        return icon.get("emoji") or "💡"
+    return "💡"
+
+
+def get_callout_style(color: str | None) -> str:
+    color_key = (color or "default").removesuffix("_background")
+    background, border = CALLOUT_COLOR_STYLES.get(color_key, CALLOUT_COLOR_STYLES["default"])
+    return (
+        "display:flex;"
+        "gap:0.75rem;"
+        "align-items:flex-start;"
+        "padding:1rem 1.1rem;"
+        "margin:1.25rem 0;"
+        "border-radius:14px;"
+        f"background:{background};"
+        f"border:1px solid {border};"
+    )
+
+
+def render_callout_block(callout: dict[str, Any], children_md: str = "") -> str:
+    summary_text = get_rich_text(callout.get("rich_text", [])).strip()
+    icon = get_callout_icon(callout)
+    style = get_callout_style(callout.get("color"))
+
+    body_parts = [part for part in [summary_text, children_md.strip()] if part]
+    if not body_parts:
+        return ""
+
+    body_md = "\n\n".join(body_parts)
+    return (
+        f'<div class="notion-callout" style="{style}" markdown="1">\n'
+        f'<div class="notion-callout__icon" style="font-size:1.25rem;line-height:1.4;flex:0 0 auto;">{icon}</div>\n'
+        '<div class="notion-callout__content" style="flex:1 1 auto;min-width:0;" markdown="1">\n\n'
+        f"{body_md}\n\n"
+        "</div>\n"
+        "</div>\n\n"
+    )
+
+
 def parse_block(config: NotionConfig, block, children_md=""):
     block_type = block.get("type", "")
     md_text = ""
@@ -597,11 +651,7 @@ def parse_block(config: NotionConfig, block, children_md=""):
         summary_text = get_rich_text(block["toggle"]["rich_text"])
         md_text = f"<details markdown=\"1\">\n<summary>{summary_text}</summary>\n\n{children_md}\n\n</details>\n\n"
     elif block_type == "callout":
-        summary_text = get_rich_text(block["callout"]["rich_text"]).strip()
-        if summary_text:
-            md_text = f"> {summary_text}\n\n{children_md}"
-        else:
-            md_text = children_md
+        md_text = render_callout_block(block["callout"], children_md)
     elif block_type == "code":
         language = block["code"].get("language", "")
         code_text = get_rich_text(block["code"]["rich_text"])

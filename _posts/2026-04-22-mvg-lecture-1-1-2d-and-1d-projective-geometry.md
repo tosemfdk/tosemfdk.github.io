@@ -11,6 +11,10 @@ categories:
 
 
 
+<div class="notion-callout" style="display:flex;gap:0.75rem;align-items:flex-start;padding:1rem 1.1rem;margin:1.25rem 0;border-radius:14px;background:rgba(127, 127, 127, 0.12);border:1px solid rgba(127, 127, 127, 0.28);" markdown="1">
+<div class="notion-callout__icon" style="font-size:1.25rem;line-height:1.4;flex:0 0 auto;">💡</div>
+<div class="notion-callout__content" style="flex:1 1 auto;min-width:0;" markdown="1">
+
 ## Introductions 
 
 ### **projective transformation이란**
@@ -33,6 +37,14 @@ categories:
   - “projective transformation에 대해 invariant하다”
 - 이것을 통해 projective transformation 을 “직선을 보존시키면서 변형하는 어떠한 mapping”이라고 정의할 수 있음.
 
+</div>
+</div>
+
+
+
+<div class="notion-callout" style="display:flex;gap:0.75rem;align-items:flex-start;padding:1rem 1.1rem;margin:1.25rem 0;border-radius:14px;background:rgba(127, 127, 127, 0.12);border:1px solid rgba(127, 127, 127, 0.28);" markdown="1">
+<div class="notion-callout__icon" style="font-size:1.25rem;line-height:1.4;flex:0 0 auto;">💡</div>
+<div class="notion-callout__content" style="flex:1 1 auto;min-width:0;" markdown="1">
 
 ## Euclidean V.S. Projective
 
@@ -64,6 +76,14 @@ categories:
 - point at infinity의 위치도 위 그림에서 확인할 수 있다.
 - $(0, 0, 0)$**: 이건 homogeneous coordinate에서도 정의되지 않는다.**
 
+</div>
+</div>
+
+
+
+<div class="notion-callout" style="display:flex;gap:0.75rem;align-items:flex-start;padding:1rem 1.1rem;margin:1.25rem 0;border-radius:14px;background:rgba(127, 127, 127, 0.12);border:1px solid rgba(127, 127, 127, 0.28);" markdown="1">
+<div class="notion-callout__icon" style="font-size:1.25rem;line-height:1.4;flex:0 0 auto;">💡</div>
+<div class="notion-callout__content" style="flex:1 1 auto;min-width:0;" markdown="1">
 
 ## The 2D Projective Plane
 
@@ -74,6 +94,14 @@ categories:
 - ~projective space에서의 line: plane으로 표현~
   - ~따라서 line은 이 plane의 normal vector로 표현할 수 있다.~
 
+</div>
+</div>
+
+
+
+<div class="notion-callout" style="display:flex;gap:0.75rem;align-items:flex-start;padding:1rem 1.1rem;margin:1.25rem 0;border-radius:14px;background:rgba(127, 127, 127, 0.12);border:1px solid rgba(127, 127, 127, 0.28);" markdown="1">
+<div class="notion-callout__icon" style="font-size:1.25rem;line-height:1.4;flex:0 0 auto;">💡</div>
+<div class="notion-callout__content" style="flex:1 1 auto;min-width:0;" markdown="1">
 
 ## Lines and Points
 
@@ -89,10 +117,18 @@ categories:
 - 즉 $(a, b, c)$와 $k(a, b, c)$ 는 non-zero k에 대해 **equivalent class**이다. 
 - $(0, 0, 0)$은 어떠한 correspond line이 없다.
 
+</div>
+</div>
 
 
 
 
+
+
+
+<div class="notion-callout" style="display:flex;gap:0.75rem;align-items:flex-start;padding:1rem 1.1rem;margin:1.25rem 0;border-radius:14px;background:rgba(127, 127, 127, 0.12);border:1px solid rgba(127, 127, 127, 0.28);" markdown="1">
+<div class="notion-callout__icon" style="font-size:1.25rem;line-height:1.4;flex:0 0 auto;">💡</div>
+<div class="notion-callout__content" style="flex:1 1 auto;min-width:0;" markdown="1">
 
 ## Incidence relations
 
@@ -142,8 +178,16 @@ categories:
   - 이 normal vector를 가지는 평면은 homogeneous coordinate 상에서 line을 의미함
   - 따라서 두 point간의 외적은 어느 하나의 line을 나타낼 수 있음 .
 
+</div>
+</div>
 
 
+
+
+
+<div class="notion-callout" style="display:flex;gap:0.75rem;align-items:flex-start;padding:1rem 1.1rem;margin:1.25rem 0;border-radius:14px;background:rgba(127, 127, 127, 0.12);border:1px solid rgba(127, 127, 127, 0.28);" markdown="1">
+<div class="notion-callout__icon" style="font-size:1.25rem;line-height:1.4;flex:0 0 auto;">💡</div>
+<div class="notion-callout__content" style="flex:1 1 auto;min-width:0;" markdown="1">
 
 ## Ideal points and line at infinity
 
@@ -174,13 +218,28 @@ categories:
   - 두 직선들의 normal 방향이다.
   - 즉 $(b,-a)$가 특정되면, 해당 방향을 가지는 모든 평행한 선들이 특정된다는 뜻이고, 이는 곧 그 선들이 $(b,-a)$에서 모두 만난다는 의미를 가진다.
   - 이런 의미에서, $(b,-a)$는 line at infinity 위에 존재하고, 이 line at infinity는 두 평행한 선들의 교차점이 되므로 line at infinity를 2D projective space에서의 line들의 **방향들의 집합**으로 생각할 수 있음.
-> **remark**
+<div class="notion-callout" style="display:flex;gap:0.75rem;align-items:flex-start;padding:1rem 1.1rem;margin:1.25rem 0;border-radius:14px;background:rgba(127, 127, 127, 0.12);border:1px solid rgba(127, 127, 127, 0.28);" markdown="1">
+<div class="notion-callout__icon" style="font-size:1.25rem;line-height:1.4;flex:0 0 auto;">💡</div>
+<div class="notion-callout__content" style="flex:1 1 auto;min-width:0;" markdown="1">
+
+**remark**
 
 - line과 line간의 교차점이 하나의 point가 된다는 것과, 두개의 point가 line 상에 존재한다는 내용을 서술할 때
 - Euclidean space에서는 위에 대해 “평행한 선”들끼리에 대해서는 예외를 둘 수밖에 없다.
 - 즉 projective space에서는 이러한 내용을 더욱 간단하게 설명할 수 있게 된다. (평행한 선들을 따로 예외로 처리하지 않고 이들마저 모두 line at infinity 상에 위치한 ideal point에서 만난다는 것으로 다른 경우와 동일하게 처리할 수 있기 때문)
 - 하지만 책에선 이 ideal point와 line at infinity를 특별한 것으로 취급할 것이라 함
 
+</div>
+</div>
+
+</div>
+</div>
+
+
+
+<div class="notion-callout" style="display:flex;gap:0.75rem;align-items:flex-start;padding:1rem 1.1rem;margin:1.25rem 0;border-radius:14px;background:rgba(127, 127, 127, 0.12);border:1px solid rgba(127, 127, 127, 0.28);" markdown="1">
+<div class="notion-callout__icon" style="font-size:1.25rem;line-height:1.4;flex:0 0 auto;">💡</div>
+<div class="notion-callout__content" style="flex:1 1 auto;min-width:0;" markdown="1">
 
 ## Duality principle
 
@@ -190,6 +249,10 @@ categories:
   - homogeneous coordinate의 표현 상에서 dual
   - projective space 상에서의 연산에 대해서 dual
 - line과 point가 interchangeable 하다는 특성으로 duality principle을 이끌어냄.
+
+</div>
+</div>
+
 
 
 ## 참고자료

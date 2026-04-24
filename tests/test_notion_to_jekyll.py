@@ -177,6 +177,57 @@ class NotionToJekyllTests(unittest.TestCase):
             self.assertIn("![demo](/assets/img/posts/vid1.gif)", rendered)
             self.assertNotIn("<video", rendered)
 
+    def test_parse_block_image_renders_mp4_embed_when_gif_falls_back(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            config = self.make_config(tempdir)
+            block = {
+                "type": "image",
+                "id": "img1",
+                "image": {
+                    "file": {"url": "https://example.com/anim.gif"},
+                    "caption": [{"plain_text": "animation"}],
+                },
+            }
+            with mock.patch.object(notion, "download_media", return_value="/assets/img/posts/img1.mp4"):
+                rendered = notion.parse_block(config, block)
+            self.assertIn("<video", rendered)
+            self.assertIn('/assets/img/posts/img1.mp4', rendered)
+            self.assertIn('title="animation"', rendered)
+
+    def test_parse_block_video_renders_mp4_embed_when_fallback_used(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            config = self.make_config(tempdir)
+            block = {
+                "type": "video",
+                "id": "vidmp4",
+                "video": {
+                    "file": {"url": "https://example.com/video.mp4"},
+                    "caption": [{"plain_text": "demo"}],
+                },
+            }
+            with mock.patch.object(notion, "download_media", return_value="/assets/img/posts/vidmp4.mp4"):
+                rendered = notion.parse_block(config, block)
+            self.assertIn("<video", rendered)
+            self.assertIn('/assets/img/posts/vidmp4.mp4', rendered)
+
+    def test_parse_block_external_youtube_video_renders_iframe(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            config = self.make_config(tempdir)
+            block = {
+                "type": "video",
+                "video": {
+                    "type": "external",
+                    "external": {
+                        "url": "https://www.youtube.com/watch?v=p05akAOSrUA&list=abc",
+                    },
+                    "caption": [{"plain_text": "lecture"}],
+                },
+            }
+            rendered = notion.parse_block(config, block)
+            self.assertIn("<iframe", rendered)
+            self.assertIn("https://www.youtube.com/embed/p05akAOSrUA", rendered)
+            self.assertIn("lecture", rendered)
+
     def test_parse_block_child_page_keeps_child_content(self):
         with tempfile.TemporaryDirectory() as tempdir:
             config = self.make_config(tempdir)
@@ -284,7 +335,7 @@ class NotionToJekyllTests(unittest.TestCase):
 
     def test_parse_block_video_raises_when_no_gif_is_produced(self):
         with tempfile.TemporaryDirectory() as tempdir:
-            config = self.make_config(tempdir)
+            config = self.make_config(tempdir, NOTION_IMPORT_MODE="direct_children")
             block = {
                 "type": "video",
                 "id": "vid2",
@@ -293,9 +344,27 @@ class NotionToJekyllTests(unittest.TestCase):
                     "caption": [{"plain_text": "demo"}],
                 },
             }
-            with mock.patch.object(notion, "download_media", return_value="https://example.com/video.mp4"):
+            with mock.patch.object(notion, "download_media", return_value="https://example.com/video.bin"):
                 with self.assertRaises(RuntimeError):
                     notion.parse_block(config, block)
+
+    def test_download_media_falls_back_to_mp4_for_single_page_gif(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            config = self.make_config(tempdir, NOTION_IMPORT_MODE="single", NOTION_MAX_GIF_MB="1")
+            large_gif = b"x" * (2 * 1024 * 1024)
+            def fake_convert_to_mp4(_input_path, output_path):
+                Path(output_path).write_bytes(b"mp4-data")
+                return True
+            with mock.patch.object(
+                notion.requests,
+                "get",
+                return_value=self.FakeResponse(status_code=200, content=large_gif, chunks=[large_gif]),
+            ), mock.patch.object(notion, "convert_video_to_gif_with_limit", return_value=False), mock.patch.object(
+                notion, "convert_media_to_mp4", side_effect=fake_convert_to_mp4
+            ):
+                path = notion.download_media(config, "https://example.com/anim.gif", "gifmp4", "gif")
+            self.assertEqual(path, "/assets/img/posts/gifmp4.mp4")
+            self.assertIn("/assets/img/posts/gifmp4.mp4", config.generated_assets)
 
     def test_download_media_raises_when_video_download_fails(self):
         with tempfile.TemporaryDirectory() as tempdir:

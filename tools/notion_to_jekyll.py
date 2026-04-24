@@ -5,6 +5,7 @@ import os
 import re
 import shutil
 import subprocess
+from urllib.parse import parse_qs, urlparse
 from dataclasses import dataclass, field
 from io import BytesIO
 from typing import Any
@@ -432,6 +433,69 @@ def convert_video_to_gif_with_limit(input_path, output_path, max_bytes):
     return False
 
 
+def convert_media_to_mp4(input_path: str, output_path: str) -> bool:
+    if not command_exists("ffmpeg"):
+        print("ffmpeg is not available; cannot convert media to MP4.")
+        return False
+
+    attempts = [
+        [
+            "ffmpeg",
+            "-y",
+            "-i",
+            input_path,
+            "-t",
+            "12",
+            "-vf",
+            "scale='min(1280,iw)':-2:flags=lanczos",
+            "-an",
+            "-c:v",
+            "libx264",
+            "-pix_fmt",
+            "yuv420p",
+            "-movflags",
+            "+faststart",
+            "-preset",
+            "veryfast",
+            "-crf",
+            "32",
+            output_path,
+        ],
+        [
+            "ffmpeg",
+            "-y",
+            "-stream_loop",
+            "-1",
+            "-i",
+            input_path,
+            "-t",
+            "12",
+            "-vf",
+            "scale='min(1280,iw)':-2:flags=lanczos",
+            "-an",
+            "-c:v",
+            "libx264",
+            "-pix_fmt",
+            "yuv420p",
+            "-movflags",
+            "+faststart",
+            "-preset",
+            "veryfast",
+            "-crf",
+            "32",
+            output_path,
+        ],
+    ]
+
+    for command in attempts:
+        if os.path.exists(output_path):
+            os.remove(output_path)
+        result = subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if result.returncode == 0 and os.path.exists(output_path) and os.path.getsize(output_path) > 0:
+            return True
+    return False
+
+
 def optimize_image(response_content: bytes, filepath: str):
     img = Image.open(BytesIO(response_content))
     if img.mode in ("RGBA", "P"):
@@ -460,6 +524,26 @@ def write_stream_to_file(response, filepath: str):
             file_handle.write(chunk)
 
 
+def allow_mp4_fallback(config: NotionConfig) -> bool:
+    return config.import_mode != "direct_children"
+
+
+def ensure_mp4_fallback(config: NotionConfig, temp_input: str, block_id: str) -> str:
+    filename = f"{block_id}.mp4"
+    filepath = os.path.join(config.img_dir, filename)
+    relative_path = f"/assets/img/posts/{filename}"
+    print(f"Falling back to compressed MP4: {filename}...")
+    if os.path.exists(filepath):
+        os.remove(filepath)
+    if not convert_media_to_mp4(temp_input, filepath):
+        if os.path.exists(filepath):
+            os.remove(filepath)
+        raise RuntimeError(f"Unable to create MP4 fallback for block {block_id}.")
+    config.generated_assets.add(relative_path)
+    print(f"Saved to {relative_path}")
+    return relative_path
+
+
 def ensure_gif_with_limit(config: NotionConfig, response, block_id: str, source_ext: str) -> str:
     filename = f"{block_id}.gif"
     filepath = os.path.join(config.img_dir, filename)
@@ -481,6 +565,11 @@ def ensure_gif_with_limit(config: NotionConfig, response, block_id: str, source_
     if not gif_ok:
         if os.path.exists(filepath):
             os.remove(filepath)
+        if allow_mp4_fallback(config):
+            mp4_relative_path = ensure_mp4_fallback(config, temp_input, block_id)
+            if os.path.exists(temp_input):
+                os.remove(temp_input)
+            return mp4_relative_path
         raise RuntimeError(
             f"Unable to convert GIF block {block_id} into a file under "
             f"{config.max_gif_bytes // (1024 * 1024)}MB."
@@ -488,6 +577,49 @@ def ensure_gif_with_limit(config: NotionConfig, response, block_id: str, source_
     config.generated_assets.add(relative_path)
     print(f"Saved to {relative_path}")
     return relative_path
+
+
+def render_mp4_embed(local_path: str, caption: str = "") -> str:
+    title_attr = f' title="{caption}"' if caption else ""
+    aria_attr = f' aria-label="{caption}"' if caption else ' aria-label="Embedded video"'
+    return (
+        f'<video controls loop muted playsinline preload="metadata"{title_attr}{aria_attr} '
+        f'style="max-width:100%;height:auto;border-radius:12px;">'
+        f'<source src="{local_path}" type="video/mp4">'
+        "</video>\n\n"
+    )
+
+
+def youtube_embed_url(url: str) -> str | None:
+    parsed = urlparse(url)
+    host = parsed.netloc.lower()
+    if "youtube.com" in host:
+        video_id = parse_qs(parsed.query).get("v", [None])[0]
+        if video_id:
+            return f"https://www.youtube.com/embed/{video_id}"
+    if "youtu.be" in host:
+        video_id = parsed.path.strip("/")
+        if video_id:
+            return f"https://www.youtube.com/embed/{video_id}"
+    return None
+
+
+def render_external_video(url: str, caption: str = "") -> str:
+    embed_url = youtube_embed_url(url)
+    if embed_url:
+        caption_md = f"<p><em>{caption}</em></p>\n" if caption else ""
+        return (
+            '<div class="notion-video-embed" style="margin:1.25rem 0;">\n'
+            '<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;">\n'
+            f'<iframe src="{embed_url}" title="{caption or "Embedded video"}" '
+            'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" '
+            'referrerpolicy="strict-origin-when-cross-origin" allowfullscreen '
+            'style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>\n'
+            "</div>\n"
+            f"{caption_md}</div>\n\n"
+        )
+    label = caption or url
+    return f"[{label}]({url})\n\n"
 
 
 def download_media(config: NotionConfig, url, block_id, ext):
@@ -680,9 +812,18 @@ def parse_block(config: NotionConfig, block, children_md=""):
             if len(ext) > 4:
                 ext = "png"
             local_path = download_media(config, url, block["id"], ext)
-            md_text = f"![{caption}]({local_path})\n\n"
+            if local_path.lower().endswith(".mp4"):
+                md_text = render_mp4_embed(local_path, caption)
+            else:
+                md_text = f"![{caption}]({local_path})\n\n"
     elif block_type == "video":
         video_obj = block["video"]
+        if video_obj.get("type") == "external":
+            external_url = video_obj.get("external", {}).get("url")
+            if external_url:
+                caption = get_rich_text(video_obj.get("caption", []))
+                md_text = render_external_video(external_url, caption)
+            return md_text
         url = video_obj.get("file", {}).get("url") or video_obj.get("external", {}).get("url")
         if url:
             caption = get_rich_text(video_obj.get("caption", []))
@@ -690,9 +831,12 @@ def parse_block(config: NotionConfig, block, children_md=""):
             if len(ext) > 4:
                 ext = "mp4"
             local_path = download_media(config, url, block["id"], ext)
-            if not local_path.lower().endswith(".gif"):
-                raise RuntimeError(f"Video block {block['id']} did not produce a GIF asset.")
-            md_text = f"![{caption}]({local_path})\n\n"
+            if local_path.lower().endswith(".gif"):
+                md_text = f"![{caption}]({local_path})\n\n"
+            elif local_path.lower().endswith(".mp4"):
+                md_text = render_mp4_embed(local_path, caption)
+            else:
+                raise RuntimeError(f"Video block {block['id']} did not produce a GIF or MP4 asset.")
     elif block_type == "equation":
         expr = block["equation"].get("expression", "")
         md_text = f"$$\n{expr}\n$$\n\n"

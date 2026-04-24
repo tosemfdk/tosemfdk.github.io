@@ -179,12 +179,17 @@ sudo add-apt-repository "deb https://librealsense.intel.com/Debian/apt-repo $(ls
 # intelrealsense 설치
 sudo apt-get install librealsense2-utils
 sudo apt-get install librealsense2-dev
+sudo apt install ros-humble-librealsense2*
 
 # viewer로 firmware update & 장치 인식
 realsense-viewer
+ros2 launch realsense2_camera rs_launch.py
+
 ```
 
 
 
 ![](/assets/img/posts/34ccbb7d-7937-8074-b047-d53d1e35f180.webp)
+
+![](/assets/img/posts/34ccbb7d-7937-8041-82a6-df4f9fca475f.webp)
 

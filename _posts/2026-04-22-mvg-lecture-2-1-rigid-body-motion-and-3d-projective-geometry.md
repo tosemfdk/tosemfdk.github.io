@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "[MVG] Lecture 2-2: Rigid body motion and 3D projective geometry"
+title: "[MVG] Lecture 2-1: Rigid body motion and 3D projective geometry"
 date: 2026-04-22T08:28:00.000Z
 math: true
 image:

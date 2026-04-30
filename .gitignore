@@ -29,3 +29,4 @@ assets/js/dist
 .venv
 __pycache__/
 *.pyc
+.omx/

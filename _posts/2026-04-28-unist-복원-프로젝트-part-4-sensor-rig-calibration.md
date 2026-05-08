@@ -6,7 +6,7 @@ math: true
 image:
   path: "/assets/img/posts/352cbb7d-7937-8027-9f04-da9c71071dca.gif"
 categories:
-  - "Unist"
+  - "UNIST"
 ---
 
 # Sensor & Rig

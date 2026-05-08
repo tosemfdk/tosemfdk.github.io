@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Lecture 3-1: Circular points and Absolute conic"
+title: "[MVG] Lecture 3-1: Circular points and Absolute conic"
 date: 2026-04-22T08:28:00.000Z
 math: true
 image:

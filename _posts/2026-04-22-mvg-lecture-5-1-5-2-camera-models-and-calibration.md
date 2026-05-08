@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Lecture 5-1 ~ 5-2: Camera models and calibration"
+title: "[MVG] Lecture 5-1 ~ 5-2: Camera models and calibration"
 date: 2026-04-22T08:28:00.000Z
 math: true
 image:

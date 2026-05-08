@@ -6,7 +6,7 @@ math: true
 image:
   path: "/assets/img/posts/356cbb7d-7937-8074-86c6-d3f19f3a7d7c.webp"
 categories:
-  - "Unist"
+  - "UNIST"
 ---
 
 # 데이터 동기화

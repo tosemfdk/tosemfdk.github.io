@@ -289,6 +289,32 @@ class NotionToJekyllTests(unittest.TestCase):
             rendered = notion.parse_block(config, block, "column body\n")
             self.assertIn("column body", rendered)
 
+    def test_parse_table_renders_markdown_table(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            config = self.make_config(tempdir)
+            row = {
+                "type": "table_row",
+                "table_row": {
+                    "cells": [
+                        [{"plain_text": "구분"}],
+                        [{"plain_text": "IR 패턴 | RGB-D"}],
+                    ]
+                },
+            }
+            first_row = notion.parse_block(config, row)
+            second_row = notion.parse_block(
+                config,
+                {
+                    "type": "table_row",
+                    "table_row": {"cells": [[{"plain_text": "검은색"}], [{"plain_text": "hole"}]]},
+                },
+            )
+            rendered = notion.parse_block(config, {"type": "table"}, first_row + second_row)
+            self.assertEqual(
+                rendered,
+                "| 구분 | IR 패턴 \\| RGB-D |\n| --- | --- |\n| 검은색 | hole |\n\n",
+            )
+
     def test_get_page_blocks_inserts_blank_line_before_fenced_code_after_list(self):
         with tempfile.TemporaryDirectory() as tempdir:
             config = self.make_config(tempdir)

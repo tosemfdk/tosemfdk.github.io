@@ -11,7 +11,11 @@ from io import BytesIO
 from typing import Any
 
 import requests
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
+except ImportError:  # pragma: no cover - exercised only in minimal local environments
+    def load_dotenv(*_args, **_kwargs):
+        return False
 from PIL import Image
 
 QUALITY_PROFILES = [
@@ -505,7 +509,8 @@ def optimize_image(response_content: bytes, filepath: str):
     if img.width > max_width:
         wpercent = max_width / float(img.width)
         hsize = int(float(img.height) * float(wpercent))
-        img = img.resize((max_width, hsize), Image.Resampling.LANCZOS)
+        resampling = getattr(Image, "Resampling", Image).LANCZOS
+        img = img.resize((max_width, hsize), resampling)
 
     img.save(filepath, "WEBP", quality=85, optimize=True)
 
@@ -759,6 +764,20 @@ def render_callout_block(callout: dict[str, Any], children_md: str = "") -> str:
     )
 
 
+def escape_markdown_table_cell(content: str) -> str:
+    return content.replace("\n", "<br>").replace("|", "\\|").strip()
+
+
+def render_table_from_rows(children_md: str) -> str:
+    rows = [line for line in children_md.splitlines() if line.startswith("|") and line.endswith("|")]
+    if not rows:
+        return ""
+
+    column_count = max(len(re.findall(r"(?<!\\)\|", row)) - 1 for row in rows)
+    separator = "| " + " | ".join(["---"] * column_count) + " |"
+    return "\n".join([rows[0], separator, *rows[1:]]) + "\n\n"
+
+
 def parse_block(config: NotionConfig, block, children_md=""):
     block_type = block.get("type", "")
     md_text = ""
@@ -794,6 +813,11 @@ def parse_block(config: NotionConfig, block, children_md=""):
         md_text = f"### {block['child_database']['title']}\n\n{children_md}"
     elif block_type in {"column_list", "column"}:
         md_text = children_md
+    elif block_type == "table":
+        md_text = render_table_from_rows(children_md)
+    elif block_type == "table_row":
+        cells = block["table_row"].get("cells", [])
+        md_text = "| " + " | ".join(escape_markdown_table_cell(get_rich_text(cell)) for cell in cells) + " |\n"
     elif block_type == "table_of_contents":
         md_text = ""
     elif block_type == "bookmark":

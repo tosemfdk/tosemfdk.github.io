@@ -194,7 +194,14 @@
 
   window.addEventListener("keydown", (event) => {
     const tagName = document.activeElement?.tagName;
-    if (tagName === "INPUT" || tagName === "TEXTAREA" || tagName === "SELECT") return;
+    if (
+      document.activeElement?.isContentEditable ||
+      tagName === "INPUT" ||
+      tagName === "TEXTAREA" ||
+      tagName === "SELECT"
+    ) {
+      return;
+    }
 
     if (event.key === "ArrowRight" || event.key === "ArrowDown" || event.key === "PageDown" || event.key === " ") {
       event.preventDefault();

@@ -98,6 +98,48 @@ published: true
 관리합니다. 화살표·스페이스바 이동, 터치 스와이프, URL 해시, 개요(`O`),
 전체화면(`F`), 프래그먼트가 기본 제공됩니다.
 
+### 브라우저 Slide Studio
+
+`editor_enabled: true`인 덱은 공개 발표 화면을 유지하면서 소유자 전용 Draft를
+브라우저에서 편집할 수 있습니다. 최초 한 번 API 서비스를 설치합니다.
+
+```shell
+./tools/install-slide-editor-service.sh
+./tools/install-service.sh
+```
+
+설치 명령은 256-bit Editor Key를
+`~/.config/tosemfdk/slide-editor-token`에 권한 `0600`으로 만들고 클립보드에
+복사합니다. 키는 Git이나 정적 사이트에 포함되지 않습니다. 편집기는 다음 주소로
+엽니다.
+
+```text
+https://tosemfdk.com/slides/active-scene-change-detection/?edit=1
+```
+
+편집 모드에서 제공하는 기능:
+
+- 슬라이드 객체 클릭 선택, 드래그 이동, 텍스트 더블클릭 편집
+- 텍스트·이미지·도형 추가와 객체 삭제
+- 폰트·크기·색상·정렬·위치·등장 애니메이션 변경
+- 객체별 댓글 작성, 해결, 다시 열기
+- 실행 취소·다시 실행, 자동 저장, 애니메이션/캔버스 미리보기
+- 자연어 명령 스킬: `오른쪽에서 나타나서 왼쪽에 위치하도록 해줘`,
+  `폰트를 명조로 바꿔줘`, `크기를 48px로`, `댓글: 그래프를 더 크게`
+
+Draft와 객체 댓글은 `.slide-editor/` 아래에만 저장되어 공개 빌드와 Git에서
+제외됩니다. Draft 이미지도 인증 쿠키가 있어야 미리 볼 수 있습니다.
+`Freeze & Publish`를 누를 때만 댓글을 제거한 공개 JSON을 만들고, Jekyll의
+원자적 배포를 실행한 뒤 공개 변경분을 Git에 커밋·푸시합니다.
+
+서비스 상태와 로그:
+
+```shell
+launchctl print "gui/$(id -u)/com.tosemfdk.slide-editor"
+curl http://localhost:5555/slide-editor-api/health
+tail -f ~/Library/Logs/tosemfdk/slide-editor-error.log
+```
+
 ## Notion 가져오기
 
 `tools/notion_to_jekyll.py`는 Notion 콘텐츠를 `_posts/`로 가져옵니다.

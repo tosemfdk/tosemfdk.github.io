@@ -30,3 +30,4 @@ assets/js/dist
 __pycache__/
 *.pyc
 .omx/
+.slide-editor/

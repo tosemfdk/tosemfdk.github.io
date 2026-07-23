@@ -6,9 +6,16 @@
 :5555 {
 	bind 127.0.0.1 ::1
 
-	root * /Users/loe/workspace/github/tosemfdk/.deploy/current
 	encode zstd gzip
-	file_server
+
+	handle /slide-editor-api/* {
+		reverse_proxy 127.0.0.1:5556
+	}
+
+	handle {
+		root * /Users/loe/workspace/github/tosemfdk/.deploy/current
+		file_server
+	}
 
 	header {
 		-Server

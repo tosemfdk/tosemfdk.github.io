@@ -17,6 +17,12 @@
     <link rel="icon" href="{{ '/assets/img/favicons/favicon.ico' | relative_url }}">
     <link rel="stylesheet" href="{{ '/assets/css/slides/core.css' | relative_url }}">
     <link rel="stylesheet" href="{{ '/assets/css/slides/' | append: slide_theme | append: '.css' | relative_url }}">
+    {% if page.editor_enabled %}
+      <link
+        rel="stylesheet"
+        href="{{ '/assets/css/slides/editor.css' | relative_url }}?v={{ site.time | date: '%s' }}"
+      >
+    {% endif %}
   </head>
 
   <body class="slides-page slides-theme-{{ page.theme | default: 'loe' }}">
@@ -73,5 +79,11 @@
     </dialog>
 
     <script src="{{ '/assets/js/slides.js' | relative_url }}"></script>
+    {% if page.editor_enabled %}
+      <script
+        src="{{ '/assets/js/slide-editor.js' | relative_url }}?v={{ site.time | date: '%s' }}"
+        data-deck-slug="{{ page.slug | escape }}"
+      ></script>
+    {% endif %}
   </body>
 </html>

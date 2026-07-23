@@ -73,6 +73,9 @@ main() {
   grep -q "/slides/active-scene-change-detection/" "$SITE_DIR/slides/index.html"
   grep -q 'data-action="next"' "$SITE_DIR/slides/interactive-web-slides/index.html"
   grep -q 'assets/css/slides/active-scd.css' "$SITE_DIR/slides/active-scene-change-detection/index.html"
+  grep -q 'assets/css/slides/editor.css' "$SITE_DIR/slides/active-scene-change-detection/index.html"
+  grep -q 'assets/js/slide-editor.js' "$SITE_DIR/slides/active-scene-change-detection/index.html"
+  grep -q 'data-deck-slug="active-scene-change-detection"' "$SITE_DIR/slides/active-scene-change-detection/index.html"
   grep -q "/assets/js/slides.js" "$SITE_DIR/slides/interactive-web-slides/index.html"
 
   slide_count="$(
@@ -91,6 +94,9 @@ main() {
 
   if command -v node >/dev/null 2>&1; then
     node --check assets/js/slides.js
+    node --check assets/js/slide-editor.js
+    node --check tools/slide-editor-server.mjs
+    node --test tools/slide-editor-server.test.mjs
   fi
 }
 

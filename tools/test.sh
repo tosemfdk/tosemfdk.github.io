@@ -68,8 +68,11 @@ main() {
   # Slides collection integration
   test -s "$SITE_DIR/slides/index.html"
   test -s "$SITE_DIR/slides/interactive-web-slides/index.html"
+  test -s "$SITE_DIR/slides/active-scene-change-detection/index.html"
   grep -q "/slides/interactive-web-slides/" "$SITE_DIR/slides/index.html"
+  grep -q "/slides/active-scene-change-detection/" "$SITE_DIR/slides/index.html"
   grep -q 'data-action="next"' "$SITE_DIR/slides/interactive-web-slides/index.html"
+  grep -q 'assets/css/slides/active-scd.css' "$SITE_DIR/slides/active-scene-change-detection/index.html"
   grep -q "/assets/js/slides.js" "$SITE_DIR/slides/interactive-web-slides/index.html"
 
   slide_count="$(
@@ -78,6 +81,13 @@ main() {
       | tr -d ' '
   )"
   test "$slide_count" -eq 6
+
+  active_scd_slide_count="$(
+    grep -o 'data-slide[ >]' "$SITE_DIR/slides/active-scene-change-detection/index.html" \
+      | wc -l \
+      | tr -d ' '
+  )"
+  test "$active_scd_slide_count" -eq 10
 
   if command -v node >/dev/null 2>&1; then
     node --check assets/js/slides.js

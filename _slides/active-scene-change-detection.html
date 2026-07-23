@@ -1,0 +1,419 @@
+---
+title: "Active Scene Change Detection via Next Best View Selection"
+cover_title: "Active SCD × NBVS"
+description: "기존 PDF 발표자료를 텍스트, 표, 데이터 시각화와 단계별 인터랙션이 살아 있는 웹 프레젠테이션으로 재구성했습니다."
+date: 2026-07-23
+theme: active-scd
+theme_color: "#175df5"
+accent: "#1788f5"
+slide_count: 10
+published: true
+---
+
+<section class="ascd-cover" data-slide aria-label="표지">
+  <div class="cover-grid" aria-hidden="true"></div>
+
+  <div class="cover-copy">
+    <p class="cover-kicker">ACTIVE PERCEPTION · 07/21</p>
+    <h1>Scene Change Detection <span>&amp;</span><br>Next Best View Selection</h1>
+    <p class="cover-subtitle">Active scene change detection <span>via next-best-view selection</span></p>
+  </div>
+
+  <div class="cover-affiliations">
+    <strong class="university-mark">UNIST <span>AIGS</span></strong>
+    <strong class="lab-mark lab-mark--light">3D VISION &amp;<br><span>ROBOTICS LAB</span></strong>
+  </div>
+</section>
+
+<section class="ascd-slide ascd-slide--pipeline" data-slide aria-label="Scene Change Detection 소개">
+  <header class="research-header">
+    <div>
+      <span>Introduction</span>
+      <strong>Scene Change Detection <em>(SCD)</em></strong>
+    </div>
+    <strong class="lab-mark">3D VISION &amp;<br><span>ROBOTICS LAB</span></strong>
+  </header>
+
+  <div class="research-content">
+    <div class="slide-heading">
+      <p>WHAT IS SCD?</p>
+      <h2>Detecting change with <strong>3D Gaussian Splatting</strong></h2>
+    </div>
+
+    <div class="scd-pipeline" aria-label="SCD 처리 흐름">
+      <article class="pipeline-stage pipeline-stage--input">
+        <span class="stage-label">01 · INPUT</span>
+        <figure>
+          <img src="{{ '/assets/img/slides/active-scd/scd-pre-before.jpg' | relative_url }}" alt="변경 전 장면 이미지">
+          <figcaption>Pre-change images</figcaption>
+        </figure>
+        <figure>
+          <img src="{{ '/assets/img/slides/active-scd/scd-post-after.jpg' | relative_url }}" alt="변경 후 장면 이미지">
+          <figcaption>Post-change images</figcaption>
+        </figure>
+      </article>
+
+      <div class="pipeline-connector" aria-hidden="true">
+        <span>SFM</span>
+        <i></i>
+      </div>
+
+      <article class="pipeline-stage pipeline-stage--process">
+        <span class="stage-label">02 · PROCESS</span>
+        <div class="process-grid">
+          <figure>
+            <img src="{{ '/assets/img/slides/active-scd/scd-pre-scene.jpg' | relative_url }}" alt="변경 전 3DGS 장면">
+            <figcaption>Pre-change scene</figcaption>
+          </figure>
+          <figure>
+            <img src="{{ '/assets/img/slides/active-scd/scd-diff-map.jpg' | relative_url }}" alt="SSIM과 DINOv2 차이 맵">
+            <figcaption>SSIM + DINOv2 diff</figcaption>
+          </figure>
+          <figure class="process-grid__wide">
+            <img src="{{ '/assets/img/slides/active-scd/scd-same-pose.jpg' | relative_url }}" alt="동일한 카메라 포즈로 렌더링한 두 장면">
+            <figcaption>Rendered with the <strong>same pose</strong></figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <div class="pipeline-connector" aria-hidden="true">
+        <span>OPTIMIZE</span>
+        <i></i>
+      </div>
+
+      <article class="pipeline-stage pipeline-stage--output">
+        <span class="stage-label">03 · OUTPUT</span>
+        <figure>
+          <img src="{{ '/assets/img/slides/active-scd/scd-change-scene.jpg' | relative_url }}" alt="변화가 검출된 3DGS 장면">
+          <figcaption>Change 3DGS scene</figcaption>
+        </figure>
+        <figure>
+          <img src="{{ '/assets/img/slides/active-scd/scd-change-masks.jpg' | relative_url }}" alt="다중 시점 장면 변화 마스크">
+          <figcaption>Scene change masks</figcaption>
+        </figure>
+      </article>
+    </div>
+
+    <div class="insight-strip">
+      <span>Multi-view consistent mask</span>
+      <span>Real-world dataset</span>
+      <span>Online, direction-agnostic</span>
+    </div>
+
+    <p class="research-citation">
+      Galappaththige et al. “Multi-View Pose-Agnostic Change Localization with Zero Labels.” CVPR, 2025.
+    </p>
+  </div>
+</section>
+
+<section class="ascd-slide ascd-slide--comparison" data-slide aria-label="SCD 성능 비교">
+  <header class="research-header">
+    <div>
+      <span>Introduction</span>
+      <strong>Scene Change Detection <em>(SCD)</em></strong>
+    </div>
+    <strong class="lab-mark">3D VISION &amp;<br><span>ROBOTICS LAB</span></strong>
+  </header>
+
+  <div class="research-content research-content--split">
+    <div class="slide-heading">
+      <p>WHY DOES IT PERFORM WELL?</p>
+      <h2>Alignment first.<br><strong>Consistency across views.</strong></h2>
+      <div class="comparison-notes">
+        <p data-fragment><i></i>Pose alignment enables reliable change cues.</p>
+        <p data-fragment><i></i>Multi-view consistency suppresses view-dependent false positives.</p>
+      </div>
+    </div>
+
+    <div class="method-table-wrap">
+      <p class="table-caption">COMPARISON WITH PRIOR WORK</p>
+      <table class="method-table">
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Pose</th>
+            <th>Supervision</th>
+            <th>Multi-view</th>
+            <th>Mode</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><th>changeNet / CYWS2D</th><td>×</td><td>Supervised</td><td>×</td><td>Pairwise</td></tr>
+          <tr><th>GeSCF</th><td>×</td><td>Training-free</td><td>×</td><td>Pairwise</td></tr>
+          <tr><th>ChangeSim</th><td>Retrieval</td><td>Supervised</td><td>×</td><td>Online</td></tr>
+          <tr><th>OmniPoseAD</th><td>Align</td><td>Label-free</td><td>×</td><td>Per-query</td></tr>
+          <tr class="method-table__strong"><th>MV3DCD</th><td>Align</td><td>Label-free</td><td><b>✓</b></td><td>Offline</td></tr>
+          <tr class="method-table__active"><th>O-SCD</th><td>Align</td><td>Label-free</td><td><b>✓</b></td><td>Online</td></tr>
+        </tbody>
+      </table>
+      <div class="method-key">
+        <span><i></i>Pose aligned</span>
+        <span><i></i>Multi-view</span>
+        <span><i></i>Online</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="ascd-slide ascd-slide--nbvs" data-slide aria-label="Next Best View Selection 소개">
+  <header class="research-header">
+    <div>
+      <span>Introduction</span>
+      <strong>Next Best View Selection <em>(NBVS)</em></strong>
+    </div>
+    <strong class="lab-mark">3D VISION &amp;<br><span>ROBOTICS LAB</span></strong>
+  </header>
+
+  <div class="research-content">
+    <div class="slide-heading slide-heading--row">
+      <div>
+        <p>WHAT IS NBVS?</p>
+        <h2>Knowing <strong>what to see next</strong></h2>
+      </div>
+      <ul class="nbvs-points">
+        <li>A minimal subset of key images can match the PSNR of the entire dataset.</li>
+        <li>The next informative view is predicted from camera pose—without pixel information.</li>
+      </ul>
+    </div>
+
+    <div class="nbvs-figures">
+      <figure>
+        <span class="figure-number">01</span>
+        <img src="{{ '/assets/img/slides/active-scd/nbvs-block-diagonal.jpg' | relative_url }}" alt="블록 대각 근사 행렬">
+        <figcaption>Block diagonal approximation</figcaption>
+      </figure>
+      <div class="figure-bridge" aria-hidden="true"><i></i><i></i><i></i></div>
+      <figure>
+        <span class="figure-number">02</span>
+        <img src="{{ '/assets/img/slides/active-scd/nbvs-d-optimality.jpg' | relative_url }}" alt="공분산 행렬의 D-Optimality">
+        <figcaption>Covariance matrix D-Optimality</figcaption>
+      </figure>
+    </div>
+
+    <p class="research-citation">
+      Wilson et al. “POp-GS: Next Best View in 3D-Gaussian Splatting with P-Optimality.” arXiv:2412.03911, 2024.
+    </p>
+  </div>
+</section>
+
+<section class="ascd-transition" data-slide aria-label="SCD와 NBVS의 연결">
+  <div class="transition-orbit transition-orbit--left" aria-hidden="true"></div>
+  <div class="transition-orbit transition-orbit--right" aria-hidden="true"></div>
+  <p>THE CORE QUESTION</p>
+  <h2>Why do <strong>SCD</strong> and <strong>NBVS</strong><br>belong together?</h2>
+  <div class="transition-rule">
+    <span>Detect</span><i></i><span>Decide</span><i></i><span>Observe</span>
+  </div>
+  <p class="transition-subtitle">Toward online, real-world scene change detection</p>
+</section>
+
+<section class="ascd-slide ascd-slide--integration" data-slide aria-label="디지털 트윈과 로봇의 통합">
+  <header class="research-header">
+    <div>
+      <span>Introduction</span>
+      <strong>Active Scene Change Detection</strong>
+    </div>
+    <strong class="lab-mark">3D VISION &amp;<br><span>ROBOTICS LAB</span></strong>
+  </header>
+
+  <div class="research-content">
+    <div class="slide-heading">
+      <p>REAL-WORLD CONTEXT</p>
+      <h2>Integration of <strong>digital twins</strong> and <strong>robots</strong></h2>
+    </div>
+
+    <div class="integration-stage">
+      <figure>
+        <div class="integration-media">
+          <img src="{{ '/assets/img/slides/active-scd/digital-twin-factory.jpg' | relative_url }}" alt="대규모 공장 디지털 트윈">
+          <span>01</span>
+        </div>
+        <figcaption><strong>Digital twin</strong><small>Large-factory-scale world model</small></figcaption>
+      </figure>
+
+      <div class="integration-link" aria-hidden="true">
+        <i></i>
+        <span>CONTINUOUS<br>SYNC</span>
+        <i></i>
+      </div>
+
+      <figure>
+        <div class="integration-media">
+          <img src="{{ '/assets/img/slides/active-scd/deployed-service-robots.jpg' | relative_url }}" alt="현실 세계에 배치된 서비스 로봇">
+          <span>02</span>
+        </div>
+        <figcaption><strong>Deployed robots</strong><small>Service robots operating in the real world</small></figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="ascd-slide ascd-slide--active" data-slide aria-label="Active SCD가 필요한 이유">
+  <header class="research-header">
+    <div>
+      <span>Introduction</span>
+      <strong>Active Scene Change Detection</strong>
+    </div>
+    <strong class="lab-mark">3D VISION &amp;<br><span>ROBOTICS LAB</span></strong>
+  </header>
+
+  <div class="research-content">
+    <div class="active-intro">
+      <div class="slide-heading">
+        <p>WHY ACTIVE SCD?</p>
+        <h2>The robot decides<br><strong>where to look.</strong></h2>
+      </div>
+      <ul>
+        <li>Continuously detect scene changes and keep the digital twin current.</li>
+        <li>Identify changes relative to the pre-change scene in real deployments.</li>
+        <li>Validate the idea quickly by integrating NBVS into the existing SCD pipeline.</li>
+      </ul>
+    </div>
+
+    <div class="active-system">
+      <div class="robot-visual">
+        <img src="{{ '/assets/img/slides/active-scd/active-robot-observer.jpg' | relative_url }}" alt="변경된 물체를 능동적으로 관찰하는 로봇">
+        <span class="scan-pulse" aria-hidden="true"></span>
+      </div>
+
+      <div class="observation-path" aria-hidden="true">
+        <i></i><i></i><i></i>
+      </div>
+
+      <div class="observation-cards">
+        <article>
+          <span>01 · SCD</span>
+          <h3>What to watch</h3>
+          <p>Detect scene change and turn its difference from the previous scene into an objective.</p>
+        </article>
+        <article data-fragment>
+          <span>02 · NBV</span>
+          <h3>Where to watch</h3>
+          <p>Select the viewpoint that best resolves occlusion and multi-view ambiguity.</p>
+        </article>
+        <article data-fragment>
+          <span>03 · NBV</span>
+          <h3>How long to watch</h3>
+          <p>Use certainty and information gain to decide when observation is sufficient.</p>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="ascd-slide ascd-slide--feasibility" data-slide aria-label="실현 가능성 검토">
+  <header class="research-header">
+    <div>
+      <span>Introduction</span>
+      <strong>Active Scene Change Detection</strong>
+    </div>
+    <strong class="lab-mark">3D VISION &amp;<br><span>ROBOTICS LAB</span></strong>
+  </header>
+
+  <div class="research-content">
+    <div class="feasibility-title">
+      <div class="slide-heading">
+        <p>FEASIBILITY CHECK</p>
+        <h2>Can a compact subset<br><strong>describe the change?</strong></h2>
+      </div>
+      <p>
+        In the O-SCD setting, a well-chosen five-frame subset outperforms both
+        uniform selection and the all-image setting on every scene.
+      </p>
+    </div>
+
+    <div class="feasibility-grid">
+      <div class="scene-examples">
+        <figure>
+          <img src="{{ '/assets/img/slides/active-scd/forward-facing-scene.jpg' | relative_url }}" alt="정면을 향하는 장면">
+          <figcaption>Forward-facing</figcaption>
+        </figure>
+        <figure>
+          <img src="{{ '/assets/img/slides/active-scd/object-centric-scene.jpg' | relative_url }}" alt="물체 중심 장면">
+          <figcaption>Object-centric</figcaption>
+        </figure>
+      </div>
+
+      <div class="performance-chart" aria-label="장면별 다섯 프레임 선택 결과 비교">
+        <div class="chart-head">
+          <strong>5 selected frames beat all 25</strong>
+          <span>10 / 10 scenes</span>
+        </div>
+        <div class="chart-scale" aria-hidden="true"><span>.30</span><span>.45</span><span>.60</span><span>.75 mIoU</span></div>
+
+        <div class="chart-row"><span>Playground</span><i class="chart-line" style="--from: 12%; --to: 49%"></i><b class="chart-dot chart-dot--uniform" style="--x: 16%"></b><b class="chart-dot chart-dot--all" style="--x: 12%"></b><b class="chart-dot chart-dot--best" style="--x: 49%"></b><em>+44.8%</em></div>
+        <div class="chart-row"><span>Garden</span><i class="chart-line" style="--from: 34%; --to: 56%"></i><b class="chart-dot chart-dot--uniform" style="--x: 41%"></b><b class="chart-dot chart-dot--all" style="--x: 34%"></b><b class="chart-dot chart-dot--best" style="--x: 56%"></b><em>+22.0%</em></div>
+        <div class="chart-row"><span>Lunch room</span><i class="chart-line" style="--from: 5%; --to: 39%"></i><b class="chart-dot chart-dot--uniform" style="--x: 5%"></b><b class="chart-dot chart-dot--all" style="--x: 26%"></b><b class="chart-dot chart-dot--best" style="--x: 39%"></b><em>+14.5%</em></div>
+        <div class="chart-row"><span>Lounge</span><i class="chart-line" style="--from: 60%; --to: 72%"></i><b class="chart-dot chart-dot--uniform" style="--x: 61%"></b><b class="chart-dot chart-dot--all" style="--x: 60%"></b><b class="chart-dot chart-dot--best" style="--x: 72%"></b><em>+12.9%</em></div>
+        <div class="chart-row"><span>Meeting room</span><i class="chart-line" style="--from: 53%; --to: 68%"></i><b class="chart-dot chart-dot--uniform" style="--x: 53%"></b><b class="chart-dot chart-dot--all" style="--x: 56%"></b><b class="chart-dot chart-dot--best" style="--x: 68%"></b><em>+10.2%</em></div>
+        <div class="chart-row"><span>Zen</span><i class="chart-line" style="--from: 38%; --to: 76%"></i><b class="chart-dot chart-dot--uniform" style="--x: 38%"></b><b class="chart-dot chart-dot--all" style="--x: 61%"></b><b class="chart-dot chart-dot--best" style="--x: 76%"></b><em>+9.0%</em></div>
+        <div class="chart-row"><span>Pots</span><i class="chart-line" style="--from: 73%; --to: 85%"></i><b class="chart-dot chart-dot--uniform" style="--x: 73%"></b><b class="chart-dot chart-dot--all" style="--x: 72%"></b><b class="chart-dot chart-dot--best" style="--x: 85%"></b><em>+7.6%</em></div>
+        <div class="chart-row"><span>Porch</span><i class="chart-line" style="--from: 60%; --to: 80%"></i><b class="chart-dot chart-dot--uniform" style="--x: 60%"></b><b class="chart-dot chart-dot--all" style="--x: 72%"></b><b class="chart-dot chart-dot--best" style="--x: 80%"></b><em>+5.7%</em></div>
+        <div class="chart-row"><span>Cantina</span><i class="chart-line" style="--from: 45%; --to: 75%"></i><b class="chart-dot chart-dot--uniform" style="--x: 45%"></b><b class="chart-dot chart-dot--all" style="--x: 66%"></b><b class="chart-dot chart-dot--best" style="--x: 75%"></b><em>+5.3%</em></div>
+        <div class="chart-row"><span>Printing area</span><i class="chart-line" style="--from: 69%; --to: 98%"></i><b class="chart-dot chart-dot--uniform" style="--x: 69%"></b><b class="chart-dot chart-dot--all" style="--x: 91%"></b><b class="chart-dot chart-dot--best" style="--x: 98%"></b><em>+3.6%</em></div>
+
+        <div class="chart-legend">
+          <span><i class="chart-dot--uniform"></i>uniform-5</span>
+          <span><i class="chart-dot--all"></i>all-25</span>
+          <span><i class="chart-dot--best"></i>best-5 found</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="ascd-slide ascd-slide--causes" data-slide aria-label="SCD 결과에 영향을 주는 요인">
+  <header class="research-header">
+    <div>
+      <span>Introduction</span>
+      <strong>Active Scene Change Detection</strong>
+    </div>
+    <strong class="lab-mark">3D VISION &amp;<br><span>ROBOTICS LAB</span></strong>
+  </header>
+
+  <div class="research-content">
+    <div class="slide-heading">
+      <p>FEASIBILITY CHECK</p>
+      <h2>Final SCD results have<br><strong>multiple causes.</strong></h2>
+    </div>
+
+    <div class="cause-system">
+      <div class="cause-equation" aria-label="SCD 결과에 영향을 주는 네 가지 요인">
+        <span>Pose accuracy</span>
+        <i>+</i>
+        <span data-fragment>Pre-scene 3DGS quality</span>
+        <i>+</i>
+        <span data-fragment>True scene change</span>
+        <i>+</i>
+        <span data-fragment>Distractor</span>
+      </div>
+      <div class="cause-arrow" aria-hidden="true"><i></i></div>
+      <figure class="cause-cases">
+        <img src="{{ '/assets/img/slides/active-scd/scd-results-cases.jpg' | relative_url }}" alt="원본 RGB, 3DGS 렌더, 변화 단서와 정답 마스크의 비교">
+        <figcaption>
+          <span>Original RGB</span>
+          <span>3DGS render</span>
+          <span>Change cue</span>
+          <span>GT change</span>
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="ascd-final" data-slide aria-label="마무리">
+  <div class="final-shape final-shape--one" aria-hidden="true"></div>
+  <div class="final-shape final-shape--two" aria-hidden="true"></div>
+  <div class="final-shape final-shape--three" aria-hidden="true"></div>
+
+  <div class="final-copy">
+    <p>ACTIVE PERCEPTION</p>
+    <h2>Thank You!</h2>
+    <span>Scene change detection × next-best-view selection</span>
+  </div>
+
+  <div class="final-affiliations">
+    <strong class="university-mark">UNIST <span>AIGS</span></strong>
+    <strong class="lab-mark lab-mark--light">3D VISION &amp;<br><span>ROBOTICS LAB</span></strong>
+  </div>
+</section>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.tosemfdk.web</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/opt/caddy/bin/caddy</string>
+    <string>run</string>
+    <string>--config</string>
+    <string>/Users/loe/workspace/github/tosemfdk/ops/Caddyfile</string>
+    <string>--adapter</string>
+    <string>caddyfile</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/loe/workspace/github/tosemfdk</string>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+  </dict>
+
+  <key>ProcessType</key>
+  <string>Background</string>
+
+  <key>ThrottleInterval</key>
+  <integer>5</integer>
+
+  <key>StandardOutPath</key>
+  <string>/Users/loe/Library/Logs/tosemfdk/service.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>/Users/loe/Library/Logs/tosemfdk/service-error.log</string>
+</dict>
+</plist>

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="{{ page.lang | default: site.lang | default: 'ko-KR' }}">
+  <head>
+    {% assign slide_theme = page.theme | default: 'loe' %}
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#090d18">
+    <meta name="description" content="{{ page.description | default: site.description | strip_html | normalize_whitespace | escape }}">
+    <link rel="canonical" href="{{ page.url | absolute_url }}">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="{{ page.title | escape }}">
+    <meta property="og:description" content="{{ page.description | default: site.description | strip_html | normalize_whitespace | escape }}">
+    <meta property="og:url" content="{{ page.url | absolute_url }}">
+
+    <title>{{ page.title }} | {{ site.title }}</title>
+    <link rel="icon" href="{{ '/assets/img/favicons/favicon.ico' | relative_url }}">
+    <link rel="stylesheet" href="{{ '/assets/css/slides/core.css' | relative_url }}">
+    <link rel="stylesheet" href="{{ '/assets/css/slides/' | append: slide_theme | append: '.css' | relative_url }}">
+  </head>
+
+  <body class="slides-page slides-theme-{{ page.theme | default: 'loe' }}">
+    <a class="deck-exit" href="{{ '/slides/' | relative_url }}" aria-label="Slides 목록으로 돌아가기">
+      <span aria-hidden="true">←</span>
+      <span>SLIDES</span>
+    </a>
+
+    <main class="deck" data-deck aria-label="{{ page.title }}">
+      <div class="deck-slides">
+        {{ content }}
+      </div>
+
+      <div class="deck-progress" role="progressbar" aria-label="발표 진행률" aria-valuemin="1">
+        <span></span>
+      </div>
+
+      <div class="deck-status" aria-live="polite">
+        <span data-current-slide>1</span>
+        <span aria-hidden="true">/</span>
+        <span data-total-slides>1</span>
+      </div>
+
+      <nav class="deck-controls" aria-label="슬라이드 제어">
+        <button type="button" data-action="overview" aria-label="전체 슬라이드 보기" title="Overview (O)">
+          <span class="deck-grid-icon" aria-hidden="true"></span>
+        </button>
+        <button type="button" data-action="previous" aria-label="이전 슬라이드" title="Previous">
+          <span aria-hidden="true">←</span>
+        </button>
+        <button type="button" data-action="next" aria-label="다음 슬라이드" title="Next">
+          <span aria-hidden="true">→</span>
+        </button>
+        <button type="button" data-action="fullscreen" aria-label="전체 화면" title="Fullscreen (F)">
+          <span class="deck-fullscreen-icon" aria-hidden="true"></span>
+        </button>
+      </nav>
+    </main>
+
+    <dialog class="deck-help" data-help-dialog>
+      <form method="dialog">
+        <button class="deck-help__close" aria-label="도움말 닫기">×</button>
+        <p class="deck-help__eyebrow">KEYBOARD SHORTCUTS</p>
+        <h2>발표자료 조작법</h2>
+        <dl>
+          <div><dt>→ / Space</dt><dd>다음 단계</dd></div>
+          <div><dt>←</dt><dd>이전 단계</dd></div>
+          <div><dt>O</dt><dd>전체 슬라이드 보기</dd></div>
+          <div><dt>F</dt><dd>전체 화면</dd></div>
+          <div><dt>Home / End</dt><dd>처음 / 마지막</dd></div>
+          <div><dt>?</dt><dd>도움말</dd></div>
+        </dl>
+      </form>
+    </dialog>
+
+    <script src="{{ '/assets/js/slides.js' | relative_url }}"></script>
+  </body>
+</html>

@@ -64,6 +64,24 @@ main() {
   bundle exec htmlproofer "$SITE_DIR" \
     --disable-external \
     --ignore-urls "/^http:\/\/127.0.0.1/,/^http:\/\/0.0.0.0/,/^http:\/\/localhost/"
+
+  # Slides collection integration
+  test -s "$SITE_DIR/slides/index.html"
+  test -s "$SITE_DIR/slides/interactive-web-slides/index.html"
+  grep -q "/slides/interactive-web-slides/" "$SITE_DIR/slides/index.html"
+  grep -q 'data-action="next"' "$SITE_DIR/slides/interactive-web-slides/index.html"
+  grep -q "/assets/js/slides.js" "$SITE_DIR/slides/interactive-web-slides/index.html"
+
+  slide_count="$(
+    grep -o 'data-slide[ >]' "$SITE_DIR/slides/interactive-web-slides/index.html" \
+      | wc -l \
+      | tr -d ' '
+  )"
+  test "$slide_count" -eq 6
+
+  if command -v node >/dev/null 2>&1; then
+    node --check assets/js/slides.js
+  fi
 }
 
 while (($#)); do

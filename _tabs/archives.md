@@ -2,7 +2,7 @@
 layout: page
 title: Archives
 icon: fas fa-archive
-order: 3
+order: 4
 ---
 
 {% assign archive_posts = site.posts | where_exp: "post", "post.archive != false and post.basic_post != true" %}

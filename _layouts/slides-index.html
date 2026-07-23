@@ -1,0 +1,47 @@
+---
+layout: page
+---
+
+{% assign published_slides = site.slides | where_exp: "deck", "deck.published != false" | sort: "date" | reverse %}
+
+<div class="slides-library">
+  <div class="slides-library__intro">
+    <p class="slides-library__eyebrow">WEB-NATIVE PRESENTATIONS</p>
+    <p>
+      브라우저에서 바로 실행되는 인터랙티브 발표자료입니다.
+      화살표 키와 스페이스바로 이동하고, 모바일에서는 좌우로 넘겨보세요.
+    </p>
+  </div>
+
+  {% if published_slides.size > 0 %}
+    <div class="slides-library__grid">
+      {% for deck in published_slides %}
+        <article class="deck-card" style="--deck-accent: {{ deck.accent | default: '#6d5dfc' }}">
+          <a class="deck-card__preview" href="{{ deck.url | relative_url }}" aria-label="{{ deck.title }} 열기">
+            <span class="deck-card__orb deck-card__orb--one"></span>
+            <span class="deck-card__orb deck-card__orb--two"></span>
+            <span class="deck-card__label">INTERACTIVE DECK</span>
+            <strong>{{ deck.cover_title | default: deck.title }}</strong>
+            <span class="deck-card__play" aria-hidden="true">▶</span>
+          </a>
+
+          <div class="deck-card__body">
+            <div class="deck-card__meta">
+              <time datetime="{{ deck.date | date_to_xmlschema }}">{{ deck.date | date: "%Y.%m.%d" }}</time>
+              {% if deck.slide_count %}
+                <span>{{ deck.slide_count }} slides</span>
+              {% endif %}
+            </div>
+            <h2><a href="{{ deck.url | relative_url }}">{{ deck.title }}</a></h2>
+            <p>{{ deck.description }}</p>
+            <a class="deck-card__open" href="{{ deck.url | relative_url }}">
+              발표자료 열기 <span aria-hidden="true">→</span>
+            </a>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="slides-library__empty">아직 공개된 발표자료가 없습니다.</p>
+  {% endif %}
+</div>

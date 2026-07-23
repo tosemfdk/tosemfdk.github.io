@@ -1,0 +1,161 @@
+---
+title: "Interactive Web Slides"
+cover_title: "CSS로 만드는 발표자료"
+description: "CSS와 JavaScript만으로 구성한 LOE의 첫 웹 기반 인터랙티브 발표자료 예시입니다."
+date: 2026-07-23
+theme: loe
+accent: "#8b6cff"
+slide_count: 6
+published: true
+---
+
+<section class="slide--hero" data-slide aria-label="표지">
+  <div class="hero-copy">
+    <div class="slide-kicker">LOE · WEB PRESENTATION</div>
+    <h1><span class="gradient-text">CSS로 만드는</span> 발표자료</h1>
+    <p class="hero-summary">
+      설치 없이 링크 하나로 공유하고, 브라우저 안에서 움직이고 반응하는
+      프레젠테이션 시스템.
+    </p>
+    <div class="hero-meta">
+      <span>Keyboard</span>
+      <span>Touch</span>
+      <span>Fullscreen</span>
+    </div>
+  </div>
+
+  <div class="hero-orbit" aria-hidden="true">
+    <div class="orbit-ring"></div>
+    <div class="orbit-core">LOE</div>
+    <i class="orbit-dot orbit-dot--one"></i>
+    <i class="orbit-dot orbit-dot--two"></i>
+    <i class="orbit-dot orbit-dot--three"></i>
+  </div>
+</section>
+
+<section class="slide--statement" data-slide aria-label="웹 기반 발표자료의 장점">
+  <div class="slide-kicker">01 · WHY WEB-NATIVE</div>
+  <h2>웹이 곧<br><span class="gradient-text">발표 파일</span></h2>
+  <p class="statement-lead">
+    PDF를 다운로드할 필요 없이 항상 최신 버전을 같은 URL에서 보여줍니다.
+  </p>
+
+  <div class="feature-grid">
+    <article class="feature-card" data-fragment>
+      <span class="feature-number">01 / SHARE</span>
+      <h3>링크 하나로 공유</h3>
+      <p>도메인 하위 페이지가 곧 발표자료의 영구 주소가 됩니다.</p>
+    </article>
+    <article class="feature-card" data-fragment>
+      <span class="feature-number">02 / MOTION</span>
+      <h3>단계적으로 설명</h3>
+      <p>복잡한 구조도 한 요소씩 등장시켜 청중의 시선을 안내합니다.</p>
+    </article>
+    <article class="feature-card" data-fragment>
+      <span class="feature-number">03 / MEDIA</span>
+      <h3>영상과 데모를 그대로</h3>
+      <p>GIF, 영상, 코드와 실제 웹 인터랙션을 문서 안에 담을 수 있습니다.</p>
+    </article>
+  </div>
+</section>
+
+<section class="slide--fragments" data-slide aria-label="슬라이드 작성법">
+  <div class="fragment-copy">
+    <div class="slide-kicker">02 · AUTHORING</div>
+    <h2>HTML은 구조,<br><span class="gradient-text">CSS는 무대</span></h2>
+    <p>
+      각 <code>&lt;section&gt;</code>이 한 장의 슬라이드가 되고,
+      <code>data-fragment</code>를 붙인 요소는 순서대로 나타납니다.
+    </p>
+
+    <div class="fragment-steps">
+      <div class="fragment-step" data-fragment><span>STEP 1</span> 슬라이드 구조 작성</div>
+      <div class="fragment-step" data-fragment><span>STEP 2</span> 테마 CSS로 시각화</div>
+      <div class="fragment-step" data-fragment><span>STEP 3</span> Jekyll 빌드 후 즉시 배포</div>
+    </div>
+  </div>
+
+  <div class="code-window">
+    <div class="code-window__bar" aria-hidden="true"><i></i><i></i><i></i></div>
+    <pre><code><span class="code-tag">&lt;section</span> <span class="code-attr">data-slide</span><span class="code-tag">&gt;</span>
+  <span class="code-tag">&lt;h2&gt;</span>핵심 메시지<span class="code-tag">&lt;/h2&gt;</span>
+
+  <span class="code-tag">&lt;p</span> <span class="code-attr">data-fragment</span><span class="code-tag">&gt;</span>
+    한 단계씩 공개되는 설명
+  <span class="code-tag">&lt;/p&gt;</span>
+
+  <span class="code-tag">&lt;video</span>
+    <span class="code-attr">src</span>=<span class="code-value">"/assets/demo.mp4"</span>
+    <span class="code-attr">autoplay muted loop</span>
+  <span class="code-tag">/&gt;</span>
+<span class="code-tag">&lt;/section&gt;</span></code></pre>
+  </div>
+</section>
+
+<section class="slide--system" data-slide aria-label="인터랙티브 시스템">
+  <div class="system-copy">
+    <div class="slide-kicker">03 · INTERACTION</div>
+    <h2>청중과 함께<br><span class="gradient-text">움직이는 흐름</span></h2>
+    <p>키보드, 터치, URL 해시가 모두 같은 슬라이드 상태를 제어합니다.</p>
+    <div class="shortcut-row">
+      <kbd>←</kbd><kbd>→</kbd><kbd>SPACE</kbd><kbd>O</kbd><kbd>F</kbd>
+    </div>
+  </div>
+
+  <div class="system-board">
+    <article class="system-node" data-fragment>
+      <span class="system-node__icon">⌨</span>
+      <strong>Keyboard</strong>
+    </article>
+    <article class="system-node" data-fragment>
+      <span class="system-node__icon">JS</span>
+      <strong>Slide State</strong>
+    </article>
+    <article class="system-node" data-fragment>
+      <span class="system-node__icon">#</span>
+      <strong>Shareable URL</strong>
+    </article>
+  </div>
+</section>
+
+<section class="slide--responsive" data-slide aria-label="반응형 화면">
+  <div class="responsive-copy">
+    <div class="slide-kicker">04 · RESPONSIVE</div>
+    <h2>어떤 화면도<br><span class="gradient-text">발표 무대</span></h2>
+    <p>
+      데스크톱에서는 넓게, 모바일에서는 읽기 쉽게 재배치됩니다.
+      스와이프로 다음 장을 넘길 수도 있습니다.
+    </p>
+  </div>
+
+  <div class="device-stage" aria-hidden="true">
+    <div class="device device--desktop"></div>
+    <div class="device device--tablet" data-fragment></div>
+    <div class="device device--phone" data-fragment></div>
+  </div>
+</section>
+
+<section class="slide--final" data-slide aria-label="마무리">
+  <div class="slide-kicker">05 · READY TO PRESENT</div>
+  <h2><span class="gradient-text">다음 발표도</span><br>웹에서.</h2>
+  <p>
+    이제 <strong>tosemfdk.com/slides</strong>에서 발표자료를 모아보고,
+    각 덱을 독립적인 인터랙티브 페이지로 공유할 수 있습니다.
+  </p>
+  <span class="final-pill"><i></i> LIVE ON TOSEMFDK.COM</span>
+
+  <div class="wave-bars" aria-hidden="true">
+    <i style="--bar-height: 2rem; --bar-color: #8b6cff; --bar-delay: -0.2s"></i>
+    <i style="--bar-height: 4rem; --bar-color: #4de0d1; --bar-delay: -0.7s"></i>
+    <i style="--bar-height: 2.8rem; --bar-color: #ff745e; --bar-delay: -1.1s"></i>
+    <i style="--bar-height: 5rem; --bar-color: #ffc857; --bar-delay: -0.4s"></i>
+    <i style="--bar-height: 3.2rem; --bar-color: #8b6cff; --bar-delay: -1.4s"></i>
+    <i style="--bar-height: 4.4rem; --bar-color: #4de0d1; --bar-delay: -0.9s"></i>
+    <i style="--bar-height: 2.4rem; --bar-color: #ff745e; --bar-delay: -0.1s"></i>
+    <i style="--bar-height: 4.8rem; --bar-color: #ffc857; --bar-delay: -1.2s"></i>
+    <i style="--bar-height: 3.4rem; --bar-color: #8b6cff; --bar-delay: -0.5s"></i>
+    <i style="--bar-height: 2.2rem; --bar-color: #4de0d1; --bar-delay: -1.5s"></i>
+    <i style="--bar-height: 4.1rem; --bar-color: #ff745e; --bar-delay: -0.8s"></i>
+    <i style="--bar-height: 2.7rem; --bar-color: #ffc857; --bar-delay: -0.3s"></i>
+  </div>
+</section>

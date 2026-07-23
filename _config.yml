@@ -169,6 +169,9 @@ collections:
   tabs:
     output: true
     sort_by: order
+  slides:
+    output: true
+    permalink: /slides/:name/
 
 defaults:
   - scope:
@@ -191,6 +194,12 @@ defaults:
     values:
       layout: page
       permalink: /:title/
+  - scope:
+      path: ""
+      type: slides
+    values:
+      layout: slides
+      sitemap: true
 
 sass:
   style: compressed

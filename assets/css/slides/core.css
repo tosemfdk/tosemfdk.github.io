@@ -1,0 +1,446 @@
+:root {
+  color-scheme: dark;
+  --deck-bg: #090d18;
+  --deck-ink: #f7f8ff;
+  --deck-muted: #aab1c5;
+  --deck-accent: #7c5cff;
+  --deck-control: rgba(10, 14, 27, 0.72);
+  --deck-line: rgba(255, 255, 255, 0.16);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: var(--deck-bg);
+}
+
+body {
+  color: var(--deck-ink);
+  font-family:
+    Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+a {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+.deck {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  isolation: isolate;
+  touch-action: pan-y;
+}
+
+.deck-slides {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+[data-slide] {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  width: 100%;
+  height: 100%;
+  padding:
+    max(5rem, env(safe-area-inset-top))
+    max(clamp(2rem, 7vw, 8rem), env(safe-area-inset-right))
+    max(5.5rem, env(safe-area-inset-bottom))
+    max(clamp(2rem, 7vw, 8rem), env(safe-area-inset-left));
+  overflow: hidden auto;
+  opacity: 0;
+  transform: translate3d(3%, 0, 0) scale(0.985);
+  pointer-events: none;
+  visibility: hidden;
+  transition:
+    opacity 360ms ease,
+    transform 420ms cubic-bezier(0.2, 0.75, 0.25, 1),
+    visibility 0s linear 420ms;
+}
+
+[data-slide].is-active {
+  z-index: 2;
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  pointer-events: auto;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+[data-fragment] {
+  opacity: 0;
+  transform: translateY(1.1rem);
+  visibility: hidden;
+  transition:
+    opacity 320ms ease,
+    transform 420ms cubic-bezier(0.2, 0.75, 0.25, 1),
+    visibility 0s linear 420ms;
+}
+
+[data-fragment].is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.deck-exit {
+  position: fixed;
+  top: max(1rem, env(safe-area-inset-top));
+  left: max(1rem, env(safe-area-inset-left));
+  z-index: 20;
+  display: inline-flex;
+  gap: 0.6rem;
+  align-items: center;
+  min-height: 2.6rem;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--deck-line);
+  border-radius: 999px;
+  color: var(--deck-ink);
+  background: var(--deck-control);
+  box-shadow: 0 0.8rem 2.4rem rgba(0, 0, 0, 0.18);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-decoration: none;
+  backdrop-filter: blur(18px);
+  transition:
+    border-color 180ms ease,
+    transform 180ms ease;
+}
+
+.deck-exit:hover,
+.deck-exit:focus-visible {
+  border-color: color-mix(in srgb, var(--deck-accent) 75%, white);
+  transform: translateY(-2px);
+}
+
+.deck-progress {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 20;
+  height: 0.26rem;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.deck-progress span {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--deck-accent);
+  box-shadow: 0 0 1.2rem color-mix(in srgb, var(--deck-accent) 70%, transparent);
+  transition: width 320ms ease;
+}
+
+.deck-status {
+  position: fixed;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: max(1.2rem, env(safe-area-inset-bottom));
+  z-index: 20;
+  display: flex;
+  gap: 0.35rem;
+  align-items: baseline;
+  min-width: 4.5rem;
+  color: var(--deck-muted);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.deck-status [data-current-slide] {
+  color: var(--deck-ink);
+  font-size: 1.05rem;
+}
+
+.deck-controls {
+  position: fixed;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  left: 50%;
+  z-index: 20;
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.3rem;
+  border: 1px solid var(--deck-line);
+  border-radius: 999px;
+  background: var(--deck-control);
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.24);
+  transform: translateX(-50%);
+  backdrop-filter: blur(18px);
+}
+
+.deck-controls button {
+  display: grid;
+  width: 2.65rem;
+  height: 2.65rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  place-items: center;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition:
+    color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.deck-controls button:hover,
+.deck-controls button:focus-visible {
+  color: white;
+  background: color-mix(in srgb, var(--deck-accent) 72%, transparent);
+  outline: none;
+  transform: scale(1.05);
+}
+
+.deck-grid-icon,
+.deck-fullscreen-icon {
+  position: relative;
+  display: block;
+  width: 1rem;
+  height: 1rem;
+}
+
+.deck-grid-icon {
+  background:
+    linear-gradient(currentColor 0 0) 0 0 / 0.4rem 0.4rem,
+    linear-gradient(currentColor 0 0) 100% 0 / 0.4rem 0.4rem,
+    linear-gradient(currentColor 0 0) 0 100% / 0.4rem 0.4rem,
+    linear-gradient(currentColor 0 0) 100% 100% / 0.4rem 0.4rem;
+  background-repeat: no-repeat;
+}
+
+.deck-fullscreen-icon {
+  border: 0.12rem solid currentColor;
+  clip-path: polygon(0 0, 40% 0, 40% 18%, 18% 18%, 18% 40%, 0 40%, 0 0, 100% 0, 100% 40%, 82% 40%, 82% 18%, 60% 18%, 60% 0, 100% 0, 100% 100%, 60% 100%, 60% 82%, 82% 82%, 82% 60%, 100% 60%, 100% 100%, 0 100%, 0 60%, 18% 60%, 18% 82%, 40% 82%, 40% 100%, 0 100%);
+}
+
+.deck-help {
+  width: min(34rem, calc(100% - 2rem));
+  padding: 0;
+  border: 1px solid var(--deck-line);
+  border-radius: 1.5rem;
+  color: var(--deck-ink);
+  background: rgba(11, 15, 29, 0.96);
+  box-shadow: 0 2rem 6rem rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(24px);
+}
+
+.deck-help::backdrop {
+  background: rgba(3, 5, 12, 0.76);
+  backdrop-filter: blur(8px);
+}
+
+.deck-help form {
+  position: relative;
+  padding: 2.2rem;
+}
+
+.deck-help__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: grid;
+  width: 2.2rem;
+  height: 2.2rem;
+  padding: 0;
+  border: 1px solid var(--deck-line);
+  border-radius: 50%;
+  place-items: center;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.4rem;
+}
+
+.deck-help__eyebrow {
+  margin: 0 0 0.65rem;
+  color: var(--deck-accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.deck-help h2 {
+  margin: 0 0 1.6rem;
+  font-size: clamp(1.7rem, 4vw, 2.4rem);
+}
+
+.deck-help dl {
+  display: grid;
+  gap: 0;
+  margin: 0;
+}
+
+.deck-help dl div {
+  display: grid;
+  grid-template-columns: 8rem 1fr;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--deck-line);
+}
+
+.deck-help dt {
+  color: white;
+  font-weight: 800;
+}
+
+.deck-help dd {
+  margin: 0;
+  color: var(--deck-muted);
+}
+
+body.is-overview {
+  overflow: auto;
+}
+
+body.is-overview .deck {
+  height: auto;
+  min-height: 100%;
+  padding: 6rem clamp(1rem, 4vw, 4rem);
+  background: #080c16;
+}
+
+body.is-overview .deck-slides {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(26rem, 100%), 1fr));
+  gap: 1.4rem;
+  overflow: visible;
+}
+
+body.is-overview [data-slide] {
+  position: relative;
+  inset: auto;
+  display: grid;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  padding: 2rem;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border: 2px solid transparent;
+  border-radius: 1.1rem;
+  opacity: 0.7;
+  pointer-events: auto;
+  transform: none;
+  visibility: visible;
+  cursor: pointer;
+  zoom: 0.72;
+}
+
+body.is-overview [data-slide].is-active {
+  border-color: var(--deck-accent);
+  opacity: 1;
+}
+
+body.is-overview [data-fragment] {
+  opacity: 1;
+  transform: none;
+  visibility: visible;
+}
+
+body.is-overview .deck-progress,
+body.is-overview .deck-status {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  [data-slide] {
+    align-content: start;
+    padding:
+      max(5rem, env(safe-area-inset-top))
+      max(1.2rem, env(safe-area-inset-right))
+      max(6rem, env(safe-area-inset-bottom))
+      max(1.2rem, env(safe-area-inset-left));
+  }
+
+  .deck-exit span:last-child {
+    display: none;
+  }
+
+  .deck-controls {
+    left: max(1rem, env(safe-area-inset-left));
+    transform: none;
+  }
+
+  .deck-controls button {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .deck-help dl div {
+    grid-template-columns: 6.5rem 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media print {
+  html,
+  body {
+    height: auto;
+    overflow: visible;
+    background: white;
+  }
+
+  .deck {
+    height: auto;
+  }
+
+  .deck-slides {
+    position: static;
+    overflow: visible;
+  }
+
+  [data-slide] {
+    position: relative;
+    display: grid;
+    height: 100vh;
+    break-after: page;
+    opacity: 1;
+    transform: none;
+    visibility: visible;
+  }
+
+  [data-fragment] {
+    opacity: 1;
+    transform: none;
+    visibility: visible;
+  }
+
+  .deck-exit,
+  .deck-progress,
+  .deck-status,
+  .deck-controls,
+  .deck-help {
+    display: none;
+  }
+}

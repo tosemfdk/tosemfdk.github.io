@@ -67,6 +67,37 @@ bash tools/test.sh
 개발 서버는 `bash tools/run.sh`로 실행할 수 있습니다. 프로덕션 서비스와 포트가
 겹치지 않도록 기본 Jekyll 포트인 `4000`을 사용합니다.
 
+## 발표자료 작성
+
+`_slides/`에 HTML 파일을 추가하면 `/slides/<파일명>/`에 독립적인 전체화면
+발표자료가 생성되고 `/slides/` 목록에도 자동으로 표시됩니다.
+
+```html
+---
+title: "발표 제목"
+description: "목록과 검색엔진에 표시할 설명"
+date: 2026-07-23
+theme: loe
+accent: "#8b6cff"
+slide_count: 2
+published: true
+---
+
+<section data-slide aria-label="표지">
+  <h1>발표 제목</h1>
+</section>
+
+<section data-slide aria-label="두 번째 슬라이드">
+  <h2>핵심 메시지</h2>
+  <p data-fragment>한 단계씩 나타나는 설명</p>
+</section>
+```
+
+공통 인터랙션은 `assets/js/slides.js`, 레이아웃은
+`assets/css/slides/core.css`, 덱 테마는 `assets/css/slides/<theme>.css`에서
+관리합니다. 화살표·스페이스바 이동, 터치 스와이프, URL 해시, 개요(`O`),
+전체화면(`F`), 프래그먼트가 기본 제공됩니다.
+
 ## Notion 가져오기
 
 `tools/notion_to_jekyll.py`는 Notion 콘텐츠를 `_posts/`로 가져옵니다.

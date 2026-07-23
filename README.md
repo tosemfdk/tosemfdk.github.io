@@ -1,12 +1,12 @@
 # tosemfdk.com
 
 Jekyll과 [Chirpy](https://github.com/cotes2020/jekyll-theme-chirpy)를 사용하는 개인 블로그입니다.
-프로덕션 빌드는 이 Mac에서 Caddy를 통해 `localhost:45555`로 제공되고,
+프로덕션 빌드는 이 Mac에서 Caddy를 통해 `localhost:5555`로 제공되고,
 Cloudflare Tunnel이 `https://tosemfdk.com`으로 연결합니다.
 
 > macOS는 TCP `55555` 포트를 시스템 용도로 예약하므로 애플리케이션이 해당
 > 포트에 바인딩할 수 없습니다. Cloudflare Tunnel의 `tosemfdk.com` origin은
-> `http://localhost:45555`로 설정해야 합니다.
+> `http://localhost:5555`로 설정해야 합니다.
 
 ## 로컬 운영
 
@@ -37,7 +37,7 @@ brew install ruby@3.4 caddy
 ```shell
 launchctl print "gui/$(id -u)/com.tosemfdk.web"
 launchctl kickstart -k "gui/$(id -u)/com.tosemfdk.web"
-curl -I http://localhost:45555
+curl -I http://localhost:5555
 ```
 
 로그:

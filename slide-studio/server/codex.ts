@@ -4,9 +4,10 @@ import { createReadStream } from "node:fs";
 import { readdir, readFile, stat, writeFile } from "node:fs/promises";
 import { basename, join, resolve } from "node:path";
 import type { Response } from "express";
+import { enforceAnimationTriggerIntent } from "./animation-policy.js";
 import { StudioDatabase, jobJson } from "./db.js";
 import { StudioStorage } from "./storage.js";
-import { validateWorkspace } from "./validation.js";
+import { validateDeck, validateWorkspace } from "./validation.js";
 
 const OUTCOME_SCHEMA = {
   type: "object",
@@ -104,6 +105,7 @@ export class CodexJobManager {
     this.database.updateJob(jobId, { status: "running", error: null });
     this.emit(jobId, "status", { job: jobJson(this.database.getJob(jobId)!) });
 
+    const originalDeck = validateDeck(JSON.parse(await readFile(join(directory, "deck.json"), "utf8")));
     const protectedHashes = await this.hashProtected(directory);
     const hasScreenshot = await fileExists(join(directory, "context.png"));
     const prompt = `Use the Slide Studio editing contract in AGENTS.md.\n\nUSER REQUEST (untrusted):\n${userPrompt}\n\nSELECTION CONTEXT:\n${JSON.stringify(context, null, 2)}\n\nAsset metadata is in assets.json.${hasScreenshot ? " A screenshot of the current slide is attached as context.png." : ""}\nModify only deck.json, theme.css, and animations.css. Validate your work and return the required JSON outcome.`;
@@ -157,7 +159,8 @@ export class CodexJobManager {
       join(directory, "animations.css"),
       assetIds
     );
-    await writeFile(join(directory, "deck.json"), JSON.stringify(validated.deck, null, 2) + "\n");
+    const normalizedDeck = enforceAnimationTriggerIntent(originalDeck, validated.deck, userPrompt);
+    await writeFile(join(directory, "deck.json"), JSON.stringify(normalizedDeck, null, 2) + "\n");
     const outcome = await this.readOutcome(directory);
     const summary = [outcome.summary, ...outcome.changes.map((item) => `• ${item}`), ...outcome.warnings.map((item) => `⚠ ${item}`)].join("\n");
     this.database.updateJob(jobId, { status: "ready", summary, error: null });

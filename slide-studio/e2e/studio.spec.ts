@@ -15,3 +15,47 @@ test("creates a deck and adds positioned content", async ({ page }) => {
   await page.mouse.click(box.x + box.width * 0.7, box.y + box.height * 0.35);
   await expect(page.locator(".context-chips")).toContainText("@point");
 });
+
+test("fits a 16:9 preview and reveals click animations with the right arrow", async ({ page, request }) => {
+  const projectResponse = await request.post("/api/projects", { data: { name: `Animation ${Date.now()}` } });
+  const project = await projectResponse.json();
+  const detailResponse = await request.get(`/api/projects/${project.id}`);
+  const detail = await detailResponse.json();
+  detail.deck.slides[0].objects.push({
+    id: "animated-shape",
+    type: "shape",
+    x: 760,
+    y: 390,
+    width: 400,
+    height: 300,
+    rotation: 0,
+    zIndex: 1,
+    styles: { backgroundColor: "#5b7cfa", borderRadius: "40px" },
+    animation: {
+      name: "zoom-in",
+      trigger: "click",
+      durationMs: 100,
+      delayMs: 0,
+      easing: "linear",
+      iterationCount: 1
+    }
+  });
+  await request.put(`/api/projects/${project.id}/deck`, { data: detail.deck });
+
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto(`/api/projects/${project.id}/preview`);
+  const viewport = page.locator(".studio-viewport");
+  const box = await viewport.boundingBox();
+  expect(box?.x).toBeCloseTo(0, 0);
+  expect(box?.y).toBeCloseTo(0, 0);
+  expect(box?.width).toBeCloseTo(1280, 0);
+  expect(box?.height).toBeCloseTo(720, 0);
+
+  const object = page.locator('[data-object-id="animated-shape"]');
+  await expect(object).toHaveCSS("visibility", "hidden");
+  const next = page.locator('[data-action="next"]');
+  await expect(next).toHaveClass(/has-pending-animation/);
+  await next.click();
+  await expect(object).toHaveClass(/is-visible/);
+  await expect(next).not.toHaveClass(/has-pending-animation/);
+});

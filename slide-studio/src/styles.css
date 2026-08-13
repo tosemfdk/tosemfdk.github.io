@@ -141,7 +141,8 @@ kbd { padding: 1px 4px; border: 1px solid rgb(255 255 255 / .3); border-radius: 
 .preview-grid { min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); }
 .preview-grid.single { grid-template-columns: 1fr; }
 .preview-grid > div { min-width: 0; display: grid; grid-template-rows: 30px minmax(0, 1fr); background: #0b0f18; }
-.preview-grid span { display: grid; place-items: center; color: #9aa6bb; font-size: 10px; }
+.preview-grid span { display: flex; align-items: center; justify-content: center; gap: 10px; color: #9aa6bb; font-size: 10px; }
+.preview-grid span small { color: #8098ef; font-size: 9px; }
 .preview-grid iframe { width: 100%; height: 100%; border: 0; background: #05070b; }
 .preview-dialog footer { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 13px 18px; border-top: 1px solid var(--border); }
 .preview-dialog footer pre { max-height: 90px; flex: 1; margin: 0; overflow: auto; white-space: pre-wrap; color: #aeb8ca; font: 10px/1.5 inherit; }

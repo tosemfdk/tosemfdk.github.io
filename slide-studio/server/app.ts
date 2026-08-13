@@ -150,7 +150,7 @@ export function createApp(options: AppOptions): Express {
     const name = param(request, "name");
     requiredProject(database, projectId);
     if (!new Set(["theme.css", "animations.css"]).has(name)) throw httpError(404, "File not found");
-    response.type("css").sendFile(join(storage.projectDir(projectId), name));
+    response.type("text/css").send(await readFile(join(storage.projectDir(projectId), name), "utf8"));
   }));
 
   authenticated.post("/projects/:id/ai-jobs", asyncHandler(async (request, response) => {
@@ -205,7 +205,7 @@ export function createApp(options: AppOptions): Express {
     const job = requiredReadyJob(database, param(request, "id"));
     const name = param(request, "name");
     if (!new Set(["theme.css", "animations.css"]).has(name)) throw httpError(404, "File not found");
-    response.type("css").sendFile(join(storage.jobDir(job.id), name));
+    response.type("text/css").send(await readFile(join(storage.jobDir(job.id), name), "utf8"));
   }));
 
   authenticated.post("/ai-jobs/:id/accept", asyncHandler(async (request, response) => {
@@ -291,7 +291,7 @@ export function createApp(options: AppOptions): Express {
     const file = param(request, "file");
     if (!release || !new Set(["theme.css", "animations.css"]).has(file)) throw httpError(404, "Published file not found");
     response.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-    response.type("css").sendFile(join(release.path, file));
+    response.type("text/css").send(await readFile(join(release.path, file), "utf8"));
   }));
 
   app.get("/published/:releaseId/assets/:assetId", asyncHandler(async (request, response) => {

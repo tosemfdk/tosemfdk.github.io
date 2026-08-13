@@ -59,6 +59,10 @@ process.stdin.on("end", () => {
     const projectId = created.body.id;
     const detail = await request(app).get(`/api/projects/${projectId}`).expect(200);
     expect(detail.body.deck.width).toBe(1920);
+    const theme = await request(app).get(`/api/projects/${projectId}/files/theme.css`).expect(200);
+    expect(theme.text).toContain("--deck-font");
+    const animations = await request(app).get(`/api/projects/${projectId}/files/animations.css`).expect(200);
+    expect(animations.text).toContain("@keyframes zoom-in");
 
     const upload = await request(app)
       .post(`/api/projects/${projectId}/assets`)
@@ -110,6 +114,8 @@ process.stdin.on("end", () => {
       job = (await request(app).get(`/api/ai-jobs/${job.id}`).expect(200)).body;
     }
     expect(job.status, job.error).toBe("ready");
+    await request(app).get(`/api/ai-jobs/${job.id}/files/theme.css`).expect(200);
+    await request(app).get(`/api/ai-jobs/${job.id}/files/animations.css`).expect(200);
 
     const before = await request(app).get(`/api/projects/${projectId}`).expect(200);
     expect(before.body.deck.slides[0].title).not.toBe("Codex updated");
@@ -117,7 +123,7 @@ process.stdin.on("end", () => {
     const after = await request(app).get(`/api/projects/${projectId}`).expect(200);
     expect(after.body.deck.slides[0].title).toBe("Codex updated");
     expect(after.body.deck.slides[0].objects[0].animation).toEqual({
-      name: "zoom-in", trigger: "slide-enter", durationMs: 600,
+      name: "zoom-in", trigger: "click", durationMs: 600,
       delayMs: 0, easing: "ease-out", iterationCount: 1
     });
     expect(after.body.versions).toHaveLength(1);

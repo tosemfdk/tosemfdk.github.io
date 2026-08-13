@@ -12,13 +12,13 @@ button { font: inherit; }
 .studio-deck {
   position: fixed;
   inset: 0;
-  display: grid;
-  place-items: center;
   overflow: hidden;
 }
 
 .studio-viewport {
-  position: relative;
+  position: absolute;
+  left: 50%;
+  top: 50%;
   width: 1920px;
   height: 1080px;
   transform-origin: center;
@@ -107,6 +107,14 @@ button { font: inherit; }
   cursor: pointer;
 }
 .studio-controls button:hover { background: rgb(255 255 255 / .12); }
+.studio-controls button.has-pending-animation {
+  background: #6d8cff;
+  box-shadow: 0 0 0 5px rgb(109 140 255 / .2);
+  animation: pending-pulse 1.5s ease-in-out infinite;
+}
+@keyframes pending-pulse {
+  50% { box-shadow: 0 0 0 10px rgb(109 140 255 / 0); }
+}
 .studio-counter { min-width: 62px; text-align: center; font-size: 13px; color: #c8d0e2; }
 
 .studio-overview {

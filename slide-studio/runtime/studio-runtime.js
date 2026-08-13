@@ -112,7 +112,15 @@
 
   function scale() {
     const value = Math.min(innerWidth / deck.width, innerHeight / deck.height);
-    viewport.style.transform = `scale(${value})`;
+    viewport.style.transform = `translate(-50%, -50%) scale(${value})`;
+  }
+
+  function updateNextControl() {
+    const nextButton = controls.querySelector('[data-action="next"]');
+    const hasPending = Boolean(renderedSlides[current]?.querySelector('[data-animation-trigger="click"]:not(.is-visible)'));
+    nextButton.classList.toggle("has-pending-animation", hasPending);
+    nextButton.title = hasPending ? "다음 애니메이션 재생 (→ / Space)" : "다음 슬라이드 (→ / Space)";
+    nextButton.setAttribute("aria-label", nextButton.title);
   }
 
   function show(index) {
@@ -126,6 +134,7 @@
       .forEach((element) => requestAnimationFrame(() => element.classList.add("is-visible")));
     controls.querySelector(".studio-counter").textContent = `${current + 1} / ${renderedSlides.length}`;
     history.replaceState(null, "", `#/${current + 1}`);
+    updateNextControl();
   }
 
   function next() {
@@ -133,9 +142,10 @@
     if (pending.length) {
       pending[0].classList.add("is-visible");
       clickStep += 1;
+      updateNextControl();
       return;
     }
-    show(current + 1);
+    if (current < renderedSlides.length - 1) show(current + 1);
   }
 
   function previous() {
@@ -143,9 +153,10 @@
     if (visible.length) {
       visible.at(-1).classList.remove("is-visible");
       clickStep = Math.max(0, clickStep - 1);
+      updateNextControl();
       return;
     }
-    show(current - 1);
+    if (current > 0) show(current - 1);
   }
 
   controls.addEventListener("click", (event) => {

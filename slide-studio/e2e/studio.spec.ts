@@ -8,6 +8,27 @@ test("creates a deck and adds positioned content", async ({ page }) => {
   await expect(page.getByText("Codex 디자인 편집")).toBeVisible();
   await page.getByRole("button", { name: "T 텍스트" }).click();
   await expect(page.locator(".slide-canvas .slide-object__text", { hasText: "텍스트를 입력하세요" })).toBeVisible();
+  await page.getByRole("button", { name: "○ 도형" }).click();
+  const textLayer = page.locator(".layer-list button", { hasText: "텍스트를 입력하세요" });
+  await textLayer.click({ modifiers: ["Shift"] });
+  await expect(page.locator(".slide-canvas .editor-object.is-selected")).toHaveCount(2);
+  await expect(page.locator(".context-chips .object-context-chip")).toHaveCount(2);
+
+  let submittedObjectIds: string[] = [];
+  await page.route("**/api/projects/*/ai-jobs", async (route) => {
+    const body = route.request().postDataJSON();
+    submittedObjectIds = body.context.selectedObjectIds;
+    const now = new Date().toISOString();
+    await route.fulfill({ status: 202, contentType: "application/json", body: JSON.stringify({
+      id: "multi-object-job", projectId: "test-project", status: "ready", prompt: body.prompt,
+      context: body.context, summary: "test", error: null, createdAt: now, updatedAt: now
+    }) });
+  });
+  await page.getByPlaceholder(/선택한 객체들을/).fill("선택한 객체를 함께 정렬해줘");
+  await page.getByRole("button", { name: /Codex 변경안 만들기/ }).click();
+  await expect.poll(() => submittedObjectIds.length).toBe(2);
+  expect(new Set(submittedObjectIds).size).toBe(2);
+
   await page.getByRole("button", { name: "점 좌표" }).click();
   const canvas = page.locator(".slide-canvas");
   const box = await canvas.boundingBox();

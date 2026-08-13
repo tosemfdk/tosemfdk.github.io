@@ -105,8 +105,9 @@ process.stdin.on("end", () => {
     const projectId = created.body.id;
     const started = await request(app).post(`/api/projects/${projectId}/ai-jobs`).send({
       prompt: "첫 슬라이드 제목을 바꿔줘",
-      context: { slideId: "slide", selectedObjectIds: [] }
+      context: { slideId: "slide", selectedObjectIds: ["object-a", "object-b", "object-a"] }
     }).expect(202);
+    expect(started.body.context.selectedObjectIds).toEqual(["object-a", "object-b"]);
 
     let job = started.body;
     for (let attempt = 0; attempt < 50 && ["queued", "running"].includes(job.status); attempt += 1) {

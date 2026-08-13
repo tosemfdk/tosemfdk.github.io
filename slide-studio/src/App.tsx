@@ -102,7 +102,7 @@ function Studio(props: StudioProps) {
   const [detail, setDetail] = useState<ProjectDetail | null>(null);
   const [deck, setDeck] = useState<Deck | null>(null);
   const [slideId, setSlideId] = useState<string>("");
-  const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
+  const [selectedObjectIds, setSelectedObjectIds] = useState<string[]>([]);
   const [tool, setTool] = useState<CanvasTool>("select");
   const [point, setPoint] = useState<SelectionContext["point"]>();
   const [region, setRegion] = useState<SelectionContext["region"]>();
@@ -126,7 +126,7 @@ function Studio(props: StudioProps) {
   const loadProject = useCallback(async () => {
     const value = await api.getProject(props.projectId);
     setDetail(value); setDeck(value.deck); setSlideId((current) => value.deck.slides.some((slide) => slide.id === current) ? current : value.deck.slides[0].id);
-    setSelectedObjectId(null); setSaveState("saved"); dirtyRef.current = false;
+    setSelectedObjectIds([]); setSaveState("saved"); dirtyRef.current = false;
     const reviewable = value.jobs.find((job) => ["queued", "running", "ready"].includes(job.status));
     setActiveJob(reviewable || null);
   }, [props.projectId]);
@@ -169,8 +169,27 @@ function Studio(props: StudioProps) {
   }, [activeJob?.id, activeJob?.status]);
 
   const currentSlide = deck?.slides.find((slide) => slide.id === slideId) || deck?.slides[0];
-  const selectedObject = deck && currentSlide && selectedObjectId ? findObject(deck, currentSlide.id, selectedObjectId) : undefined;
-  const context: SelectionContext = useMemo(() => ({ slideId: currentSlide?.id || "", selectedObjectIds: selectedObjectId ? [selectedObjectId] : [], ...(point ? { point } : {}), ...(region ? { region } : {}) }), [currentSlide?.id, point, region, selectedObjectId]);
+  const selectedObjects = useMemo(() => {
+    if (!deck || !currentSlide) return [];
+    return selectedObjectIds.flatMap((id) => {
+      const object = findObject(deck, currentSlide.id, id);
+      return object ? [object] : [];
+    });
+  }, [currentSlide, deck, selectedObjectIds]);
+  const selectedObject = selectedObjects.length === 1 ? selectedObjects[0] : undefined;
+  const context: SelectionContext = useMemo(() => ({
+    slideId: currentSlide?.id || "",
+    selectedObjectIds: selectedObjects.map((object) => object.id),
+    ...(point ? { point } : {}),
+    ...(region ? { region } : {})
+  }), [currentSlide?.id, point, region, selectedObjects]);
+
+  const selectObject = useCallback((objectId: string, additive = false) => {
+    setSelectedObjectIds((current) => {
+      if (!additive) return current.length === 1 && current[0] === objectId ? current : [objectId];
+      return current.includes(objectId) ? current.filter((id) => id !== objectId) : [...current, objectId];
+    });
+  }, []);
 
   const updateDeck = useCallback((producer: (next: Deck) => void, record = true) => {
     setDeck((previous) => {
@@ -190,19 +209,23 @@ function Studio(props: StudioProps) {
   }, [deck]);
 
   const addObject = useCallback((object: DeckObject) => {
-      if (!currentSlide) return;
+    if (!currentSlide) return;
     updateDeck((next) => next.slides.find((slide) => slide.id === currentSlide.id)!.objects.push(object));
-    setSelectedObjectId(object.id); setTool("select");
+    setSelectedObjectIds([object.id]); setTool("select");
   }, [currentSlide, updateDeck]);
 
   const uploadFiles = useCallback(async (files: File[]) => {
     if (!files.length) return; setUploading(true);
     try {
+      const addedObjectIds: string[] = [];
       for (const file of files) {
         const asset = await api.uploadAsset(props.projectId, file);
         setDetail((value) => value ? { ...value, assets: [asset, ...value.assets] } : value);
-        addObject(createAssetObject(asset, point));
+        const object = createAssetObject(asset, point);
+        addObject(object);
+        addedObjectIds.push(object.id);
       }
+      setSelectedObjectIds(addedObjectIds);
       setToast(`${files.length}개 자료를 캔버스에 추가했습니다.`);
     } catch (caught) { setLocalError(message(caught)); } finally { setUploading(false); }
   }, [addObject, point, props.projectId]);
@@ -220,21 +243,35 @@ function Studio(props: StudioProps) {
     const keydown = (event: KeyboardEvent) => {
       if ((event.target as HTMLElement)?.closest("input, textarea, select, [contenteditable=true]")) return;
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z") { event.preventDefault(); event.shiftKey ? redo() : undo(); }
-      if ((event.key === "Delete" || event.key === "Backspace") && selectedObjectId && currentSlide) {
-        event.preventDefault(); updateDeck((next) => { const slide = next.slides.find((item) => item.id === currentSlide.id)!; slide.objects = slide.objects.filter((object) => object.id !== selectedObjectId); }); setSelectedObjectId(null);
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "a" && currentSlide) {
+        event.preventDefault(); setSelectedObjectIds(currentSlide.objects.map((object) => object.id));
+      }
+      if (event.key === "Escape") setSelectedObjectIds([]);
+      if ((event.key === "Delete" || event.key === "Backspace") && selectedObjectIds.length && currentSlide) {
+        event.preventDefault();
+        const selected = new Set(selectedObjectIds);
+        updateDeck((next) => { const slide = next.slides.find((item) => item.id === currentSlide.id)!; slide.objects = slide.objects.filter((object) => !selected.has(object.id)); });
+        setSelectedObjectIds([]);
       }
     };
     addEventListener("keydown", keydown); return () => removeEventListener("keydown", keydown);
-  }, [currentSlide, redo, selectedObjectId, undo, updateDeck]);
+  }, [currentSlide, redo, selectedObjectIds, undo, updateDeck]);
 
   if (!detail || !deck || !currentSlide) return <div className="center-screen"><span className="spinner" /> 프로젝트를 여는 중…</div>;
 
   const patchSelected = (patch: (object: DeckObject) => void) => {
-    if (!selectedObjectId) return;
+    if (!selectedObject) return;
     updateDeck((next) => {
-      const object = next.slides.find((slide) => slide.id === currentSlide.id)!.objects.find((item) => item.id === selectedObjectId)!;
+      const object = next.slides.find((slide) => slide.id === currentSlide.id)!.objects.find((item) => item.id === selectedObject.id)!;
       patch(object);
     });
+  };
+
+  const deleteSelected = () => {
+    if (!selectedObjectIds.length) return;
+    const selected = new Set(selectedObjectIds);
+    updateDeck((next) => { const slide = next.slides.find((item) => item.id === currentSlide.id)!; slide.objects = slide.objects.filter((object) => !selected.has(object.id)); });
+    setSelectedObjectIds([]);
   };
 
   const runJob = async () => {
@@ -271,11 +308,11 @@ function Studio(props: StudioProps) {
 
       <aside className="slides-panel">
         <div className="panel-title"><strong>슬라이드</strong><button title="슬라이드 추가" onClick={() => updateDeck((next) => { const slide = createSlide(`슬라이드 ${next.slides.length + 1}`); next.slides.push(slide); setSlideId(slide.id); })}>＋</button></div>
-        <div className="slide-list">{deck.slides.map((slide, index) => <button key={slide.id} className={`slide-thumbnail ${slide.id === currentSlide.id ? "is-active" : ""}`} onClick={() => { setSlideId(slide.id); setSelectedObjectId(null); }}><span>{index + 1}</span><div style={{ background: slide.background }}><strong>{slide.title}</strong><small>{slide.objects.length} objects</small></div></button>)}</div>
+        <div className="slide-list">{deck.slides.map((slide, index) => <button key={slide.id} className={`slide-thumbnail ${slide.id === currentSlide.id ? "is-active" : ""}`} onClick={() => { setSlideId(slide.id); setSelectedObjectIds([]); }}><span>{index + 1}</span><div style={{ background: slide.background }}><strong>{slide.title}</strong><small>{slide.objects.length} objects</small></div></button>)}</div>
         <button className="danger-text" disabled={deck.slides.length === 1} onClick={() => {
           const index = deck.slides.findIndex((slide) => slide.id === currentSlide.id);
           updateDeck((next) => { next.slides.splice(index, 1); });
-          setSlideId(deck.slides[Math.max(0, index - 1)].id); setSelectedObjectId(null);
+          setSlideId(deck.slides[Math.max(0, index - 1)].id); setSelectedObjectIds([]);
         }}>현재 슬라이드 삭제</button>
       </aside>
 
@@ -291,11 +328,11 @@ function Studio(props: StudioProps) {
               ref={canvasRef}
               className={`slide-canvas tool-${tool}`}
               style={{ transform: `scale(${scale})`, background: currentSlide.background }}
-              onPointerDown={(event) => handleCanvasPointer(event, tool, canvasRef.current!, setPoint, setRegion, () => { setSelectedObjectId(null); }, () => setTool("select"))}
+              onPointerDown={(event) => handleCanvasPointer(event, tool, canvasRef.current!, setPoint, setRegion, () => { setSelectedObjectIds([]); }, () => setTool("select"))}
             >
               <style>{detail.themeCss}{"\n"}{detail.animationsCss}</style>
               {[...currentSlide.objects].sort((a, b) => a.zIndex - b.zIndex).map((object) => (
-                <CanvasObject key={object.id} object={object} projectId={props.projectId} selected={object.id === selectedObjectId} scale={scale} tool={tool} onSelect={() => setSelectedObjectId(object.id)} onChange={(nextObject, baseline) => {
+                <CanvasObject key={object.id} object={object} projectId={props.projectId} selected={selectedObjectIds.includes(object.id)} showResizeHandle={selectedObjectIds.length === 1 && selectedObjectIds[0] === object.id} scale={scale} tool={tool} onSelect={(additive) => selectObject(object.id, additive)} onChange={(nextObject, baseline) => {
                   if (baseline) undoStack.current.push(baseline);
                   setDeck((previous) => {
                     if (!previous) return previous; const next = cloneDeck(previous); const slide = next.slides.find((item) => item.id === currentSlide.id)!;
@@ -313,13 +350,13 @@ function Studio(props: StudioProps) {
       <aside className="inspector-panel">
         <div className="inspector-scroll">
           <section><div className="panel-title"><strong>슬라이드</strong></div><label>제목<input value={currentSlide.title} onChange={(event) => updateDeck((next) => { next.slides.find((slide) => slide.id === currentSlide.id)!.title = event.target.value; })} /></label><label>배경<input type="color" value={colorValue(currentSlide.background)} onChange={(event) => updateDeck((next) => { next.slides.find((slide) => slide.id === currentSlide.id)!.background = event.target.value; })} /></label></section>
-          <section><div className="panel-title"><strong>선택 객체</strong><span>{selectedObject?.type || "없음"}</span></div>{selectedObject ? <ObjectInspector object={selectedObject} onPatch={patchSelected} onDelete={() => { updateDeck((next) => { const slide = next.slides.find((item) => item.id === currentSlide.id)!; slide.objects = slide.objects.filter((item) => item.id !== selectedObject.id); }); setSelectedObjectId(null); }} /> : <p className="hint">객체를 클릭하면 위치·스타일·애니메이션을 직접 조정할 수 있습니다.</p>}</section>
-          <section><div className="panel-title"><strong>레이어</strong><span>{currentSlide.objects.length}</span></div><div className="layer-list">{[...currentSlide.objects].sort((a, b) => b.zIndex - a.zIndex).map((object) => <button key={object.id} className={object.id === selectedObjectId ? "is-active" : ""} onClick={() => setSelectedObjectId(object.id)}><span>{object.type}</span><strong>{object.content || object.id}</strong></button>)}</div></section>
+          <section><div className="panel-title"><strong>선택 객체</strong><span>{selectedObjects.length > 1 ? `${selectedObjects.length}개` : selectedObject?.type || "없음"}</span></div>{selectedObject ? <ObjectInspector object={selectedObject} onPatch={patchSelected} onDelete={deleteSelected} /> : selectedObjects.length > 1 ? <div className="multi-selection"><p className="hint"><strong>{selectedObjects.length}개 객체가 Codex 편집 대상으로 선택되었습니다.</strong><br />개별 속성 편집은 한 객체만 선택했을 때 사용할 수 있습니다.</p><button className="danger" onClick={deleteSelected}>선택 객체 {selectedObjects.length}개 삭제</button></div> : <p className="hint">객체를 클릭하면 위치·스타일·애니메이션을 직접 조정할 수 있습니다.</p>}</section>
+          <section><div className="panel-title"><strong>레이어</strong><span>{currentSlide.objects.length}</span></div><div className="layer-list">{[...currentSlide.objects].sort((a, b) => b.zIndex - a.zIndex).map((object) => <button key={object.id} aria-pressed={selectedObjectIds.includes(object.id)} title="클릭: 단일 선택 · Shift/Ctrl/Cmd+클릭: 추가 선택" className={selectedObjectIds.includes(object.id) ? "is-active" : ""} onClick={(event) => selectObject(object.id, event.shiftKey || event.ctrlKey || event.metaKey)}><span>{selectedObjectIds.includes(object.id) ? "✓ " : ""}{object.type}</span><strong>{object.content || object.id}</strong></button>)}</div><p className="selection-help">Shift/Ctrl/Cmd+클릭으로 여러 객체 선택 · Ctrl/Cmd+A로 전체 선택</p></section>
         </div>
         <section className="ai-panel">
           <div className="panel-title"><strong>Codex 디자인 편집</strong><span className={activeJob ? `job-${activeJob.status}` : ""}>{activeJob?.status || "ready"}</span></div>
-          <div className="context-chips"><span>@slide({deck.slides.indexOf(currentSlide) + 1})</span>{selectedObjectId && <span>@object({selectedObjectId.slice(-8)})</span>}{point && <button onClick={() => setPoint(undefined)}>@point({Math.round(point.x)},{Math.round(point.y)}) ×</button>}{region && <button onClick={() => setRegion(undefined)}>@region({Math.round(region.x)},{Math.round(region.y)},{Math.round(region.width)},{Math.round(region.height)}) ×</button>}</div>
-          <textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="예: 선택한 이미지를 지정한 영역에 맞추고, 오른쪽에서 회전하며 등장하는 애니메이션을 만들어줘" onKeyDown={(event) => { if ((event.metaKey || event.ctrlKey) && event.key === "Enter") runJob(); }} />
+          <div className="context-chips"><span>@slide({deck.slides.indexOf(currentSlide) + 1})</span>{selectedObjects.map((object, index) => <button className="object-context-chip" key={object.id} title="Codex 편집 대상에서 제거" onClick={() => setSelectedObjectIds((ids) => ids.filter((id) => id !== object.id))}>@object({index + 1}:{object.type}:{object.id.slice(-8)}) ×</button>)}{point && <button onClick={() => setPoint(undefined)}>@point({Math.round(point.x)},{Math.round(point.y)}) ×</button>}{region && <button onClick={() => setRegion(undefined)}>@region({Math.round(region.x)},{Math.round(region.y)},{Math.round(region.width)},{Math.round(region.height)}) ×</button>}</div>
+          <textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="예: 선택한 객체들을 지정한 영역에 함께 배치하고, 차례로 등장하는 애니메이션을 만들어줘" onKeyDown={(event) => { if ((event.metaKey || event.ctrlKey) && event.key === "Enter") runJob(); }} />
           <button className="primary ai-run" disabled={!prompt.trim() || Boolean(activeJob && ["queued", "running"].includes(activeJob.status))} onClick={runJob}>Codex 변경안 만들기 <kbd>⌘↵</kbd></button>
           {activeJob && ["queued", "running"].includes(activeJob.status) && <div className="job-progress"><span className="spinner" /><strong>격리 작업공간에서 수정 중…</strong><button onClick={() => api.cancelJob(activeJob.id).then(() => setActiveJob({ ...activeJob, status: "cancelled" }))}>취소</button><details><summary>실행 로그</summary><pre>{jobLogs.join("\n")}</pre></details></div>}
           {activeJob?.status === "ready" && <button className="review-button" onClick={() => setPreviewKey((value) => value + 1)}>변경안 비교·승인하기</button>}
@@ -335,14 +372,17 @@ function Studio(props: StudioProps) {
   );
 }
 
-function CanvasObject({ object, projectId, selected, scale, tool, onSelect, onChange, deckSnapshot }: { object: DeckObject; projectId: string; selected: boolean; scale: number; tool: CanvasTool; onSelect: () => void; onChange: (object: DeckObject, baseline?: Deck) => void; deckSnapshot: () => Deck }) {
+function CanvasObject({ object, projectId, selected, showResizeHandle, scale, tool, onSelect, onChange, deckSnapshot }: { object: DeckObject; projectId: string; selected: boolean; showResizeHandle: boolean; scale: number; tool: CanvasTool; onSelect: (additive: boolean) => void; onChange: (object: DeckObject, baseline?: Deck) => void; deckSnapshot: () => Deck }) {
   const elementStyle: CSSProperties = {
     position: "absolute", left: object.x, top: object.y, width: object.width, height: object.height,
     zIndex: object.zIndex, transform: `rotate(${object.rotation}deg)`, ...object.styles as CSSProperties
   };
   const startGesture = (event: ReactPointerEvent, mode: "move" | "resize") => {
     if (tool !== "select" || event.button !== 0) return;
-    event.stopPropagation(); event.preventDefault(); onSelect();
+    event.stopPropagation(); event.preventDefault();
+    const additive = mode === "move" && (event.shiftKey || event.ctrlKey || event.metaKey);
+    onSelect(additive);
+    if (additive) return;
     const baseline = deckSnapshot(); const initial = { ...object }; let latest = initial; const startX = event.clientX; const startY = event.clientY;
     const move = (moveEvent: PointerEvent) => {
       const dx = (moveEvent.clientX - startX) / scale; const dy = (moveEvent.clientY - startY) / scale;
@@ -361,7 +401,7 @@ function CanvasObject({ object, projectId, selected, scale, tool, onSelect, onCh
       {object.type === "audio" && <audio src={assetContentUrl(projectId, object.assetId!)} controls preload="metadata" />}
       {object.type === "pdf" && <iframe src={assetContentUrl(projectId, object.assetId!)} title={object.content || "PDF"} />}
       {object.type === "attachment" && <a href={assetContentUrl(projectId, object.assetId!)} download={object.content}>{object.content}</a>}
-      {selected && <button className="resize-handle" aria-label="크기 조절" onPointerDown={(event) => startGesture(event, "resize")} />}
+      {showResizeHandle && <button className="resize-handle" aria-label="크기 조절" onPointerDown={(event) => startGesture(event, "resize")} />}
     </div>
   );
 }

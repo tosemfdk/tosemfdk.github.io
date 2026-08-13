@@ -343,7 +343,9 @@ async function validatedProject(database: StudioDatabase, storage: StudioStorage
 function normalizeContext(value: unknown): JobContext {
   const context = value && typeof value === "object" ? value as Record<string, unknown> : {};
   const slideId = String(context.slideId || "").slice(0, 120);
-  const selectedObjectIds = Array.isArray(context.selectedObjectIds) ? context.selectedObjectIds.map(String).slice(0, 100) : [];
+  const selectedObjectIds = Array.isArray(context.selectedObjectIds)
+    ? [...new Set(context.selectedObjectIds.map(String).filter(Boolean))].slice(0, 100)
+    : [];
   const point = numericRect(context.point, false) as JobContext["point"];
   const region = numericRect(context.region, true) as JobContext["region"];
   return { slideId, selectedObjectIds, ...(point ? { point } : {}), ...(region ? { region } : {}) };

@@ -22,6 +22,7 @@ Do not create, delete, rename, or change any other file. Never write JavaScript,
 - Media objects reference an existing UUID from `assets.json`; do not invent asset IDs.
 - Keep text in `content`, geometry in `x/y/width/height/rotation/zIndex`, and visual properties in `styles`.
 - Use the user's `@object`, `@point`, and `@region` context precisely. If a request is ambiguous, make the smallest coherent visual change.
+- `selectedObjectIds` can contain multiple objects. Treat every listed ID as a joint primary target and apply the requested change coherently to all of them unless the user explicitly narrows the request.
 - Maintain legibility, safe margins, contrast, and non-overlapping layout unless overlap is intentional.
 
 ## Animation rules

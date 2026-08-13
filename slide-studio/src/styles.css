@@ -113,15 +113,19 @@ label { display: grid; gap: 6px; color: #aeb8cb; font-size: 12px; }
 .object-inspector fieldset { display: grid; gap: 4px; margin: 13px 0; padding: 10px; border: 1px solid var(--border); border-radius: 8px; }
 .object-inspector legend { padding: 0 5px; color: #9eabc3; font-size: 10px; }
 .object-inspector .danger { width: 100%; padding: 8px; border-color: #603740; color: #ff8c98; }
+.multi-selection .danger { width: 100%; padding: 8px; border-color: #603740; color: #ff8c98; }
+.multi-selection .hint strong { color: #cbd6fb; }
 .layer-list { display: grid; gap: 4px; max-height: 240px; overflow: auto; }
 .layer-list button { min-width: 0; display: grid; grid-template-columns: 64px 1fr; gap: 6px; padding: 7px; text-align: left; }
 .layer-list button.is-active { border-color: var(--accent); background: #273354; }
 .layer-list span { color: var(--muted); font-size: 9px; text-transform: uppercase; }
 .layer-list strong { overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.selection-help { margin: 8px 0 0; color: #77849d; font-size: 9px; line-height: 1.45; }
 
 .ai-panel { flex: 0 0 auto; padding: 0 13px 13px; border-top: 1px solid var(--border); background: #101521; }
 .context-chips { min-height: 27px; display: flex; flex-wrap: wrap; gap: 4px; }
 .context-chips span, .context-chips button { padding: 4px 6px; border: 0; border-radius: 5px; background: #26314f; color: #b9c8f6; font-size: 9px; }
+.context-chips .object-context-chip { background: #314273; color: #d7e0ff; }
 .ai-panel textarea { min-height: 82px; margin: 7px 0; padding: 9px; resize: vertical; font-size: 11px; line-height: 1.5; }
 .ai-run { width: 100%; display: flex; justify-content: space-between; padding: 9px; }
 kbd { padding: 1px 4px; border: 1px solid rgb(255 255 255 / .3); border-radius: 4px; font-size: 9px; }

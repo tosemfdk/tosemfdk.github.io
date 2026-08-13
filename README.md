@@ -4,6 +4,16 @@ Jekyll과 [Chirpy](https://github.com/cotes2020/jekyll-theme-chirpy)를 사용�
 프로덕션 빌드는 이 Mac에서 Caddy를 통해 `localhost:5555`로 제공되고,
 Cloudflare Tunnel이 `https://tosemfdk.com`으로 연결합니다.
 
+## 독립형 AI 발표자료 스튜디오
+
+새로운 React/TypeScript 기반 발표자료 제작 시스템은 블로그 배포와 분리되어
+`slide-studio/`에 있습니다. 파일 업로드, 좌표·영역 지정, 격리 Codex 디자인 편집,
+변경안 승인, 공개 URL 발행과 HTML ZIP 내보내기를 제공합니다. 개발 및 Mac mini
+설치 방법은 [`slide-studio/README.md`](slide-studio/README.md)를 참고합니다.
+
+아래의 기존 브라우저 Slide Studio는 Jekyll 덱을 위한 레거시 overlay 편집기로
+유지되며, 새 독립형 스튜디오의 데이터나 배포 흐름과 연결되지 않습니다.
+
 > macOS는 TCP `55555` 포트를 시스템 용도로 예약하므로 애플리케이션이 해당
 > 포트에 바인딩할 수 없습니다. Cloudflare Tunnel의 `tosemfdk.com` origin은
 > `http://localhost:5555`로 설정해야 합니다.

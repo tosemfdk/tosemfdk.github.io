@@ -1,0 +1,13 @@
+# Optional local reverse-proxy hop for Cloudflare Tunnel.
+# This is intentionally separate from the blog's existing :5555 site.
+:5561 {
+	bind 127.0.0.1 ::1
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:5560
+	header {
+		-Server
+		Referrer-Policy "no-referrer"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+	}
+}

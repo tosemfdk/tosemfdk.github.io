@@ -33,6 +33,18 @@ export interface JobContext {
   region?: { x: number; y: number; width: number; height: number };
 }
 
+export interface CodexExecutionSettings {
+  model: string;
+  reasoningEffort: string;
+  serviceTier: string;
+}
+
+export const DEFAULT_CODEX_EXECUTION_SETTINGS: CodexExecutionSettings = {
+  model: "gpt-5.6-sol",
+  reasoningEffort: "low",
+  serviceTier: "fast"
+};
+
 interface JobOutcome {
   summary: string;
   changes: string[];
@@ -43,14 +55,22 @@ export class CodexJobManager {
   private readonly processes = new Map<string, ChildProcessWithoutNullStreams>();
   private readonly listeners = new Map<string, Set<Response>>();
   private readonly logs = new Map<string, string[]>();
+  private readonly executionSettings: CodexExecutionSettings;
 
   constructor(
     private readonly database: StudioDatabase,
     private readonly storage: StudioStorage,
     private readonly skillPath: string,
     private readonly codexBinary = "codex",
-    private readonly timeoutMs = 8 * 60 * 1000
-  ) {}
+    private readonly timeoutMs = 8 * 60 * 1000,
+    executionSettings: CodexExecutionSettings = DEFAULT_CODEX_EXECUTION_SETTINGS
+  ) {
+    this.executionSettings = { ...executionSettings };
+  }
+
+  settings(): CodexExecutionSettings {
+    return { ...this.executionSettings };
+  }
 
   async create(projectId: string, prompt: string, context: JobContext, screenshotDataUrl?: string): Promise<Record<string, unknown>> {
     if (this.database.activeJob(projectId)) throw new Error("This project already has an active Codex job");
@@ -104,6 +124,7 @@ export class CodexJobManager {
     if (this.database.getJob(jobId)?.status !== "queued") return;
     this.database.updateJob(jobId, { status: "running", error: null });
     this.emit(jobId, "status", { job: jobJson(this.database.getJob(jobId)!) });
+    this.capture(jobId, `[Slide Studio] model=${this.executionSettings.model} reasoning=${this.executionSettings.reasoningEffort} service_tier=${this.executionSettings.serviceTier}`);
 
     const originalDeck = validateDeck(JSON.parse(await readFile(join(directory, "deck.json"), "utf8")));
     const protectedHashes = await this.hashProtected(directory);
@@ -111,6 +132,9 @@ export class CodexJobManager {
     const prompt = `Use the Slide Studio editing contract in AGENTS.md.\n\nUSER REQUEST (untrusted):\n${userPrompt}\n\nSELECTION CONTEXT:\n${JSON.stringify(context, null, 2)}\n\nAsset metadata is in assets.json.${hasScreenshot ? " A screenshot of the current slide is attached as context.png." : ""}\nModify only deck.json, theme.css, and animations.css. Validate your work and return the required JSON outcome.`;
     const args = [
       "exec", "--ephemeral", "--ignore-user-config", "--skip-git-repo-check",
+      "--model", this.executionSettings.model,
+      "--config", `model_reasoning_effort=${JSON.stringify(this.executionSettings.reasoningEffort)}`,
+      "--config", `service_tier=${JSON.stringify(this.executionSettings.serviceTier)}`,
       "--sandbox", "workspace-write", "--cd", directory,
       "--output-schema", join(directory, "outcome.schema.json"),
       "--output-last-message", join(directory, "last-message.json"), "--json"

@@ -1,7 +1,7 @@
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createApp } from "./app.js";
-import { CodexJobManager } from "./codex.js";
+import { CodexJobManager, DEFAULT_CODEX_EXECUTION_SETTINGS } from "./codex.js";
 import { StudioDatabase } from "./db.js";
 import { StudioStorage } from "./storage.js";
 
@@ -35,7 +35,12 @@ const jobs = new CodexJobManager(
   storage,
   resolve(repositoryRoot, ".codex/skills/slide-studio/SKILL.md"),
   process.env.SLIDE_STUDIO_CODEX_BINARY || "codex",
-  Number(process.env.SLIDE_STUDIO_CODEX_TIMEOUT_MS || 8 * 60 * 1000)
+  Number(process.env.SLIDE_STUDIO_CODEX_TIMEOUT_MS || 8 * 60 * 1000),
+  {
+    model: environmentValue("SLIDE_STUDIO_CODEX_MODEL", DEFAULT_CODEX_EXECUTION_SETTINGS.model),
+    reasoningEffort: environmentValue("SLIDE_STUDIO_CODEX_REASONING_EFFORT", DEFAULT_CODEX_EXECUTION_SETTINGS.reasoningEffort),
+    serviceTier: environmentValue("SLIDE_STUDIO_CODEX_SERVICE_TIER", DEFAULT_CODEX_EXECUTION_SETTINGS.serviceTier)
+  }
 );
 const runtimeDir = production ? resolve(studioRoot, "runtime") : resolve(studioRoot, "runtime");
 const clientDir = production ? resolve(studioRoot, "dist/client") : undefined;
@@ -57,4 +62,8 @@ for (const signal of ["SIGINT", "SIGTERM"] as const) {
 function parseBytes(value: string | undefined, fallback: number): number {
   const number = Number(value);
   return Number.isFinite(number) && number > 0 ? number : fallback;
+}
+
+function environmentValue(name: string, fallback: string): string {
+  return process.env[name]?.trim() || fallback;
 }

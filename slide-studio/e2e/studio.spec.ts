@@ -6,6 +6,7 @@ test("creates a deck and adds positioned content", async ({ page }) => {
   await page.getByPlaceholder("발표자료 제목").fill(`E2E ${Date.now()}`);
   await page.getByRole("button", { name: "새 덱 만들기" }).click();
   await expect(page.getByText("Codex 디자인 편집")).toBeVisible();
+  await expect(page.locator(".codex-mode")).toHaveText("gpt-5.6-sol · low reasoning · fast mode");
   await page.getByRole("button", { name: "T 텍스트" }).click();
   await expect(page.locator(".slide-canvas .slide-object__text", { hasText: "텍스트를 입력하세요" })).toBeVisible();
   await page.getByRole("button", { name: "○ 도형" }).click();

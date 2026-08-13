@@ -88,5 +88,8 @@ Access를 사용하지 않으면 설치 시 클립보드에 복사된 관리자 
 | `SLIDE_STUDIO_MAX_FILE_BYTES` | 2 GiB | 파일당 업로드 한도 |
 | `SLIDE_STUDIO_MAX_PROJECT_BYTES` | 20 GiB | 프로젝트당 논리 용량 한도 |
 | `SLIDE_STUDIO_CODEX_TIMEOUT_MS` | 480000 | Codex 작업 제한시간 |
+| `SLIDE_STUDIO_CODEX_MODEL` | `gpt-5.6-sol` | 슬라이드 편집에 사용할 Codex 모델 |
+| `SLIDE_STUDIO_CODEX_REASONING_EFFORT` | `low` | 응답 속도를 우선한 추론 강도 |
+| `SLIDE_STUDIO_CODEX_SERVICE_TIER` | `fast` | Codex fast 서비스 티어 |
 
 운영 데이터와 실제 인증값은 Git에 커밋하지 않습니다.

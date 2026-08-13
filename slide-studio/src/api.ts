@@ -25,6 +25,7 @@ export interface ProjectDetail {
   deck: Deck;
   themeCss: string;
   animationsCss: string;
+  codexSettings: { model: string; reasoningEffort: string; serviceTier: string };
   assets: Asset[];
   jobs: AiJob[];
   versions: Array<{ id: string; reason: string; createdAt: string }>;

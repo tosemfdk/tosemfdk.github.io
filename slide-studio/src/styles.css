@@ -123,6 +123,7 @@ label { display: grid; gap: 6px; color: #aeb8cb; font-size: 12px; }
 .selection-help { margin: 8px 0 0; color: #77849d; font-size: 9px; line-height: 1.45; }
 
 .ai-panel { flex: 0 0 auto; padding: 0 13px 13px; border-top: 1px solid var(--border); background: #101521; }
+.codex-mode { margin: -7px 0 8px; color: #83d4a2; font-size: 9px; letter-spacing: .02em; }
 .context-chips { min-height: 27px; display: flex; flex-wrap: wrap; gap: 4px; }
 .context-chips span, .context-chips button { padding: 4px 6px; border: 0; border-radius: 5px; background: #26314f; color: #b9c8f6; font-size: 9px; }
 .context-chips .object-context-chip { background: #314273; color: #d7e0ff; }

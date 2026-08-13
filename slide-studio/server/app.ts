@@ -76,6 +76,7 @@ export function createApp(options: AppOptions): Express {
       deck: workspace.deck,
       themeCss: workspace.themeCss,
       animationsCss: workspace.animationsCss,
+      codexSettings: jobs.settings(),
       assets: database.listAssets(project.id).map(assetJson),
       jobs: database.listJobs(project.id).map(jobJson),
       versions: database.listVersions(project.id).map((version) => ({ id: version.id, reason: version.reason, createdAt: version.created_at }))

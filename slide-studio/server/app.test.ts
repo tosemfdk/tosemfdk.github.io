@@ -13,6 +13,7 @@ describe("Slide Studio API", () => {
   let database: StudioDatabase;
   let storage: StudioStorage;
   let app: ReturnType<typeof createApp>;
+  let codexArgsPath: string;
 
   beforeEach(async () => {
     root = await mkdtemp(join(tmpdir(), "slide-studio-test-"));
@@ -20,9 +21,11 @@ describe("Slide Studio API", () => {
     await storage.initialize();
     database = new StudioDatabase(join(root, "data", "test.sqlite3"));
     const fakeCodex = join(root, "fake-codex");
+    codexArgsPath = join(root, "codex-args.json");
     await writeFile(fakeCodex, `#!/usr/bin/env node
 import { readFileSync, writeFileSync } from "node:fs";
 const args = process.argv.slice(2);
+writeFileSync(${JSON.stringify(codexArgsPath)}, JSON.stringify(args));
 const output = args[args.indexOf("--output-last-message") + 1];
 process.stdin.resume();
 process.stdin.on("end", () => {
@@ -59,6 +62,7 @@ process.stdin.on("end", () => {
     const projectId = created.body.id;
     const detail = await request(app).get(`/api/projects/${projectId}`).expect(200);
     expect(detail.body.deck.width).toBe(1920);
+    expect(detail.body.codexSettings).toEqual({ model: "gpt-5.6-sol", reasoningEffort: "low", serviceTier: "fast" });
     const theme = await request(app).get(`/api/projects/${projectId}/files/theme.css`).expect(200);
     expect(theme.text).toContain("--deck-font");
     const animations = await request(app).get(`/api/projects/${projectId}/files/animations.css`).expect(200);
@@ -115,6 +119,10 @@ process.stdin.on("end", () => {
       job = (await request(app).get(`/api/ai-jobs/${job.id}`).expect(200)).body;
     }
     expect(job.status, job.error).toBe("ready");
+    const codexArgs = JSON.parse(await readFile(codexArgsPath, "utf8")) as string[];
+    expect(codexArgs.slice(codexArgs.indexOf("--model"), codexArgs.indexOf("--model") + 2)).toEqual(["--model", "gpt-5.6-sol"]);
+    expect(codexArgs).toContain('model_reasoning_effort="low"');
+    expect(codexArgs).toContain('service_tier="fast"');
     await request(app).get(`/api/ai-jobs/${job.id}/files/theme.css`).expect(200);
     await request(app).get(`/api/ai-jobs/${job.id}/files/animations.css`).expect(200);
 

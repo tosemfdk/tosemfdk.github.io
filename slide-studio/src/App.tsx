@@ -355,6 +355,7 @@ function Studio(props: StudioProps) {
         </div>
         <section className="ai-panel">
           <div className="panel-title"><strong>Codex 디자인 편집</strong><span className={activeJob ? `job-${activeJob.status}` : ""}>{activeJob?.status || "ready"}</span></div>
+          <p className="codex-mode">{detail.codexSettings.model} · {detail.codexSettings.reasoningEffort} reasoning · {detail.codexSettings.serviceTier} mode</p>
           <div className="context-chips"><span>@slide({deck.slides.indexOf(currentSlide) + 1})</span>{selectedObjects.map((object, index) => <button className="object-context-chip" key={object.id} title="Codex 편집 대상에서 제거" onClick={() => setSelectedObjectIds((ids) => ids.filter((id) => id !== object.id))}>@object({index + 1}:{object.type}:{object.id.slice(-8)}) ×</button>)}{point && <button onClick={() => setPoint(undefined)}>@point({Math.round(point.x)},{Math.round(point.y)}) ×</button>}{region && <button onClick={() => setRegion(undefined)}>@region({Math.round(region.x)},{Math.round(region.y)},{Math.round(region.width)},{Math.round(region.height)}) ×</button>}</div>
           <textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="예: 선택한 객체들을 지정한 영역에 함께 배치하고, 차례로 등장하는 애니메이션을 만들어줘" onKeyDown={(event) => { if ((event.metaKey || event.ctrlKey) && event.key === "Enter") runJob(); }} />
           <button className="primary ai-run" disabled={!prompt.trim() || Boolean(activeJob && ["queued", "running"].includes(activeJob.status))} onClick={runJob}>Codex 변경안 만들기 <kbd>⌘↵</kbd></button>

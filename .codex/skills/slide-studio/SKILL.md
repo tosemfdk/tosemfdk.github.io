@@ -29,6 +29,8 @@ Do not create, delete, rename, or change any other file. Never write JavaScript,
 - Custom motion belongs in `animations.css` as CSS keyframes.
 - Assign the keyframe name and timing through the object's `animation` object.
 - Supported triggers: `click`, `slide-enter`, `with-previous`, `after-previous`.
+- Use exactly this shape; timing values are numeric milliseconds:
+  `{"name":"zoom-in","trigger":"slide-enter","durationMs":600,"delayMs":0,"easing":"ease-out","iterationCount":1}`.
 - Do not use external resources or CSS capable of network access.
 
 ## Completion

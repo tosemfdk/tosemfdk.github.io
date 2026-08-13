@@ -28,6 +28,11 @@ process.stdin.resume();
 process.stdin.on("end", () => {
   const deck = JSON.parse(readFileSync("deck.json", "utf8"));
   deck.slides[0].title = "Codex updated";
+  deck.slides[0].objects.push({
+    id: "codex-shape", type: "shape", x: 100, y: 100, width: 200, height: 200,
+    rotation: 0, zIndex: 1, styles: { backgroundColor: "#123456" },
+    animation: { name: "zoom-in", duration: "600ms", timingFunction: "ease-out", trigger: "slide-enter" }
+  });
   writeFileSync("deck.json", JSON.stringify(deck, null, 2));
   writeFileSync("theme.css", readFileSync("theme.css", "utf8") + "\\n.codex-change { color: #123456; }\\n");
   writeFileSync(output, JSON.stringify({ summary: "Updated the slide", changes: ["Changed title"], warnings: [] }));
@@ -111,6 +116,10 @@ process.stdin.on("end", () => {
     await request(app).post(`/api/ai-jobs/${job.id}/accept`).send({}).expect(200);
     const after = await request(app).get(`/api/projects/${projectId}`).expect(200);
     expect(after.body.deck.slides[0].title).toBe("Codex updated");
+    expect(after.body.deck.slides[0].objects[0].animation).toEqual({
+      name: "zoom-in", trigger: "slide-enter", durationMs: 600,
+      delayMs: 0, easing: "ease-out", iterationCount: 1
+    });
     expect(after.body.versions).toHaveLength(1);
   });
 

@@ -151,7 +151,13 @@ export class CodexJobManager {
 
     await this.assertWorkspaceBoundary(directory, protectedHashes);
     const assetIds = new Set(this.database.listAssets(current!.project_id).map((asset) => asset.id));
-    await validateWorkspace(join(directory, "deck.json"), join(directory, "theme.css"), join(directory, "animations.css"), assetIds);
+    const validated = await validateWorkspace(
+      join(directory, "deck.json"),
+      join(directory, "theme.css"),
+      join(directory, "animations.css"),
+      assetIds
+    );
+    await writeFile(join(directory, "deck.json"), JSON.stringify(validated.deck, null, 2) + "\n");
     const outcome = await this.readOutcome(directory);
     const summary = [outcome.summary, ...outcome.changes.map((item) => `• ${item}`), ...outcome.warnings.map((item) => `⚠ ${item}`)].join("\n");
     this.database.updateJob(jobId, { status: "ready", summary, error: null });

@@ -25,4 +25,35 @@ describe("Slide Studio validation", () => {
     });
     expect(() => validateDeck(deck, new Set())).toThrow(/unknown asset/i);
   });
+
+  it("normalizes abbreviated and CSS-style animation timing", () => {
+    const deck = createDeck("Demo", "demo");
+    deck.slides[0].objects.push({
+      id: "shape-1",
+      type: "shape",
+      x: 100,
+      y: 100,
+      width: 200,
+      height: 200,
+      rotation: 0,
+      zIndex: 1,
+      styles: {},
+      animation: {
+        name: "zoom-in",
+        trigger: "slide-enter",
+        duration: "0.6s",
+        timingFunction: "ease-out"
+      }
+    } as unknown as (typeof deck.slides)[number]["objects"][number]);
+
+    const normalized = validateDeck(deck);
+    expect(normalized.slides[0].objects[0].animation).toEqual({
+      name: "zoom-in",
+      trigger: "slide-enter",
+      durationMs: 600,
+      delayMs: 0,
+      easing: "ease-out",
+      iterationCount: 1
+    });
+  });
 });

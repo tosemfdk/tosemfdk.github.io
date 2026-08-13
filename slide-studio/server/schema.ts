@@ -6,14 +6,39 @@ export const CANVAS_HEIGHT = 1080;
 
 const styleValueSchema = z.union([z.string().max(500), z.number().finite()]);
 
-export const animationSchema = z.object({
+function milliseconds(value: unknown): number | undefined {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value !== "string") return undefined;
+  const match = value.trim().match(/^(\d+(?:\.\d+)?)\s*(ms|s)?$/i);
+  if (!match) return undefined;
+  const amount = Number(match[1]);
+  return match[2]?.toLowerCase() === "s" ? amount * 1000 : amount;
+}
+
+function normalizeAnimation(value: unknown): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const animation = value as Record<string, unknown>;
+  const durationMs = milliseconds(animation.durationMs) ?? milliseconds(animation.duration) ?? 700;
+  const delayMs = milliseconds(animation.delayMs) ?? milliseconds(animation.delay) ?? 0;
+  const iterationValue = Number(animation.iterationCount ?? animation.iterations ?? 1);
+  return {
+    ...animation,
+    trigger: animation.trigger ?? "click",
+    durationMs,
+    delayMs,
+    easing: animation.easing ?? animation.timingFunction ?? "ease",
+    iterationCount: Number.isFinite(iterationValue) ? iterationValue : 1
+  };
+}
+
+export const animationSchema = z.preprocess(normalizeAnimation, z.object({
   name: z.string().regex(/^[a-zA-Z_][a-zA-Z0-9_-]{0,79}$/),
-  trigger: z.enum(["click", "slide-enter", "with-previous", "after-previous"]),
-  durationMs: z.number().int().min(0).max(120_000),
-  delayMs: z.number().int().min(0).max(120_000),
-  easing: z.string().max(120),
-  iterationCount: z.number().int().min(1).max(100)
-});
+  trigger: z.enum(["click", "slide-enter", "with-previous", "after-previous"]).default("click"),
+  durationMs: z.number().int().min(0).max(120_000).default(700),
+  delayMs: z.number().int().min(0).max(120_000).default(0),
+  easing: z.string().max(120).default("ease"),
+  iterationCount: z.number().int().min(1).max(100).default(1)
+}));
 
 export const deckObjectSchema = z.object({
   id: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,119}$/),
